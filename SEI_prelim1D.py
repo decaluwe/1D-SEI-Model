@@ -22,7 +22,6 @@ from SEI_prelim_functions import IC_fun
 import cantera as ct
 from assimulo.solvers import IDA
 from assimulo.problem import Implicit_Problem
-# from dSV_dt_fun import dSV_dt
 
 cantera_file = 'W_anode_chem.cti'
 elyte_name = 'electrolyte'
@@ -143,8 +142,6 @@ rho_elyte = elyte.density_mass
 Y_elyte_vec = elyte.Y
 c_elyte_vec = np.zeros(num_elyte_species)
 c_elyte_vec = rho_elyte*Y_elyte_vec
-#for i in range(num_elyte_species):
-#    c_elyte_vec[i] = rho_elyte*Y_elyte_vec[i]
     
 print("\nThe species in the electrolyte are", elyte.species_names)
 
@@ -161,8 +158,6 @@ rho_SEI = SEI.density_mass
 Y_SEI_vec = SEI.Y
 c_SEI_vec = np.zeros(num_SEI_species)
 c_SEI_vec = rho_SEI*Y_SEI_vec
-#for i in range(num_SEI_species):
-#    c_SEI_vec[i] = rho_SEI*Y_SEI_vec[i]
     
 print("The species in the SEI are\n", SEI.species_names[1:])
 
@@ -185,8 +180,6 @@ IC_vec = np.concatenate((T_0, phi_0_vec, c_elyte_0, c_SEI_0, eps_0))
 
 """----------Define number of species for SEI and electrolyte----------"""
 
-#num_elyte_species = np.size(elyte_species)   
-#num_SEI_species   = np.size(SEI_species)
 num_species       = np.array([num_elyte_species, num_SEI_species])
 
 track_elyte_vars  = track_species_vars * num_elyte_species
@@ -225,14 +218,14 @@ SV = np.zeros([1, len_sol_vec])
 # %% Run solver and process data
 """----------Set up boundary conditions for solution vector----------"""
 
-global S_dot
 global phi_anode
 global phi_anode_0
 global R
 global phi_bounds
-global phi_ctr
 global phi_vec
-global slope_flag
+global phi_anode_vec
+global ncp_list
+global phi_ctr
 
 # Initialize the solution vector, its derivative, time, and the residual vector
 SV_0 = IC_fun(SV, IC_vec, len_sol_vec, track_vars, track_temp)
@@ -251,127 +244,173 @@ elyte_rate_ind = np.arange(elyte_rate_ptr, elyte_rate_ptr+num_elyte_species, 1)
 SEI_rate_ind = np.arange(SEI_rate_ptr, SEI_rate_ptr+num_SEI_species, 1)
 
 # Set preliminary parameters for the anode voltage sweep function
-phi_bounds = np.array([0.05, 1])  # Upper and lower voltage bounds
-R = 0.001                            # Sweep rate [V/s]
+phi_bounds = np.array([0.05, 1.5])  # Upper and lower voltage bounds
+R = 0.05                            # Sweep rate [V/s]
 phi_anode_0 = np.mean(phi_bounds)   # Initial voltage of anode [V]
-t1 = (phi_bounds[1] - phi_anode_0)/(R)
+
+# Times for discontinuities (sweep sign change) in anode voltage
+t_event0 = (phi_bounds[1] - phi_anode_0)/(R)
+t_event1 = (phi_bounds[1] - phi_bounds[0])/R + t_event0
+t_event2 = (phi_bounds[1] - phi_bounds[0])/R + t_event1
+
+phi_anode_max_0 = phi_bounds[1] + t_event0*R
+phi_anode_min_0 = phi_bounds[0] - t_event1*R
+
+phi_ctr = 0
+phi_vec = []
+t_vec = []
 
 """----------Run solver----------"""
 
+"""----------Residual function for IDA solver----------"""
 def residual(t, SV, SV_dot):
-    
+        
     # Tag global variables in residual function
+    global phi_anode_0
     global phi_anode
-    global phi_ctr
     global phi_vec
-    global slope_flag
+    global phi_ctr
+    global t_vec
     
     # Counter for production rate species 
-    j = 0
+    elyte_ctr = 0
+    SEI_ctr = 0
     
     # Set temperature, density, and concentration of species
     elyte.TDX = SV[0], rho_elyte, SV[elyte_ptr:elyte_ptr+num_elyte_species]
-    
-    # This block is intended to account for the cyclic anode voltage
-    # NOT CURRENTLY FUNCTIONAL
-    
-#    slope_flag = 1
-#    if phi_anode >= phi_bounds[1] and slope_flag == 1:
-#        slope_flag = slope_flag*(-1)
-#    elif phi_anode <= phi_bounds[0] and slope_flag == -1:
-#        slope_flag = slope_flag*(-1)
-#    phi_anode = phi_anode_0 + t*R*slope_flag
-    
-    # Calculate anode voltage
-    phi_anode = phi_anode_0 + (t*R*slope_flag)
+        
+    # This block accounts for the anode voltage based ON TIME    
+    if t <= t_event0 :
+        phi_anode = phi_anode_0 + R*t
+    elif t > t_event0 and t <= t_event1:
+        phi_anode = phi_anode_max_0 - R*t
+    elif t > t_event1 and t <= t_event2:
+        phi_anode = phi_anode_min_0 + R*t
+        
+    phi_vec.append(phi_anode)
+    t_vec.append(t)
     
     # Set anode and anode/electrolyte interface potentials
     anode.electric_potential = phi_anode
     anode_elyte.electric_potential = phi_anode
     
     # Retreive net production rates of species from cantera
-    S_dot = anode_elyte.net_production_rates[SEI_rate_ind]
+#    S_dot_elyte = anode_elyte.net_production_rates[elyte_rate_ind]
+    S_dot_SEI = anode_elyte.net_production_rates[SEI_rate_ind]
+        
+    res[0] = SV_dot[0]
+    res[1] = SV_dot[1]
+    res[2] = SV_dot[2]
+    res[3] = SV_dot[3]
     
-    # Segments of solution vector
-    for i in Gen_vars_range:
-        # Loop for temperature and phase potentials
-        res[i] = SV_dot[i]
     for i in Elyte_vars_range:
         # Loop for electrolyte concentrations
         res[i] = SV_dot[i]
+        elyte_ctr += 1
     for i in SEI_vars_range:
         # Loop for SEI concentrations
-        res[i] = SV_dot[i] - S_dot[j]/dx
-        j += 1
+        res[i] = SV_dot[i] - S_dot_SEI[SEI_ctr]/dx
+        SEI_ctr += 1
     
-    j = 0
+    elyte_ctr = 0
+    SEI_ctr = 0
+    phi_ctr += 1
     
     # Volume fraction of SEI per cell
     res[-1] = SV_dot[-1]  
     
     return res
 
+"""------------------------------------------------------------------------"""
+
 # Set up problem instance
 SEI_1D = Implicit_Problem(residual, SV_0, SV_dot_0, t_0)
 
 # Define simulation parameters
-simulation = IDA(SEI_1D)
-simulation.atol = 1e-6
-simulation.rtol = 1e-6
+simulation = IDA(SEI_1D)                # Create simulation instance
+simulation.atol = 1e-6                  # Solver absolute tolerance
+simulation.rtol = 1e-6                  # Solver relative tolerance
+simulation.maxh = 0.1                   # Solver max step size
 
-# Set simulation ed time, slope flag (for anode voltage cycle), and run simulation
-t_f = ((phi_bounds[1] - phi_anode_0)/R)
-slope_flag = 1
+# Set simulation end time, slope flag (for anode voltage cycle), and run simulation
+
+t_f = ((phi_bounds[1] - phi_anode_0)/R)*5
+
+#ncp_list = np.arange(0, t_f, 0.15)
+#ncp = 10000
+    
+# Run simulation
 t, SV, SV_dot = simulation.simulate(t_f)
-
-#t_f = (phi_bounds[1] - phi_bounds[0])/R
-#slope_flag = -1
-#t, SV, SV_dot = simulation.simulate(t_f)
-
-# This block currently calculates the voltage based on the time vector output
-# from the solver. Will be replaced once a more efficient method is found
-phi_anode_vec = np.zeros(len(t))
-ctr = 1
-phi_anode_vec[0] = phi_anode_0
-for i in range(len(t)):
-    slope_flag = 1
-    if phi_anode_vec[i-1] >= phi_bounds[1] and slope_flag == 1:
-        slope_flag = slope_flag*(-1)
-    elif phi_anode_vec[i-1] <= phi_bounds[0] and slope_flag == -1:
-        slope_flag = slope_flag*(-1)
-    phi_anode_vec[i] = phi_anode_0 + t[i]*R*slope_flag
-#    print(phi_anode_vec)
+  
     
 # %% Organize data and plot
 
-t_vec = np.array(t)
 SV_df = pd.DataFrame(SV)
 SV_df = df_2spec2var(SV_df,N_x,N_y,len_sol_vec,track_vars,track_temp,num_species)
 
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 9))
 
-ax1.plot(t_vec, SV_df['c_SEI2_00'], '-b', label = SEI_species[0, 1])
-ax1.plot(t_vec, SV_df['c_SEI3_00'], '-r', label = SEI_species[0, 2])
-ax1.plot(t_vec, SV_df['c_SEI4_00'], '-g', label = SEI_species[0, 3])
+#ax3.plot(t, SV_df['c_elyte1_00'], label = elyte_species[0, 0])
+#ax3.plot(t, SV_df['c_elyte2_00'], label = elyte_species[0, 1])
+#ax3.plot(t, SV_df['c_elyte3_00'], label = elyte_species[0, 2])
+#ax3.plot(t, SV_df['c_elyte4_00'], label = elyte_species[0, 3])
+#ax3.plot(t, SV_df['c_elyte5_00'], label = elyte_species[0, 4])
+#ax3.plot(t, SV_df['c_elyte6_00'], label = elyte_species[0, 5])
+#ax3.plot(t, SV_df['c_elyte7_00'], label = elyte_species[0, 6])
+#ax3.plot(t, SV_df['c_elyte8_00'], label = elyte_species[0, 7])
+#ax3.plot(t, SV_df['c_elyte9_00'], label = elyte_species[0, 8])
+
+ax1.plot(t, SV_df['c_SEI2_00'], '-b', label = SEI_species[0, 1])
+#ax1.plot(t, SV_df['c_SEI3_00'], '-r', label = SEI_species[0, 2])
+ax1.plot(t, SV_df['c_SEI4_00'], '-g', label = SEI_species[0, 3])
 ax1.set_ylabel('Concentration ' r"$[\frac{kmol}{m^3}]$")
 ax1.set_title('SEI species concentrations over time')
-ax1.legend(loc='right')
+ax1.legend(loc='upper left')
 
-ax2.plot(t_vec, phi_anode_vec, label = 'Anode Voltage')
+ax2.plot(t_vec, phi_vec, label = 'Anode Voltage')
 ax2.set_ylabel('Anode Potential [V]')
 ax2.set_xlabel('Time [s]')
 ax2.set_title('Anode voltage over time')
 
 plt.show()
 
-#fig, ax = plt.subplots(figsize=(10,6))
-#ax.plot(t, phi_anode_vec)
-#plt.show()
-
 #SV_plot = SV_df.plot()
 #SV_plot.legend(loc = 'upper left')
 print("\nGoodbye")
 
-# %% Functions
+# %% Functions !!!!!NOT CURRENTLY USED!!!!!
 
 
+"""----------Time events function for IDA solver----------"""
+def time_events(self, t, SV, SV_dot, sw):
+    
+    if t < t_event0:
+        t_event = t_event0
+    elif t >= t_event0 and t < t_event1:
+        t_event = t_event1
+    else:
+        t_event = None 
+    
+    return t_event
+
+"""------------------------------------------------------------------------"""
+
+"""----------Time events function for IDA solver----------"""
+def handle_event(self, solver, event_info):
+    
+    event_info = event_info[0]
+    while True:
+        self.event_switch(solver, event_info)
+        
+        b_mode = self.time_events(solver.t, solver.SV, solver.SV_dot, solver.sw)
+        self.init_mode(solver)
+        a_mode = self.time_events(solver.t, solver.SV, solver.SV_dot, solver.sw)
+        
+        event_info = self.checkeIter(b_mode, a_mode)
+        
+        if not True in event_info:
+            break
+    
+
+
+"""------------------------------------------------------------------------"""
