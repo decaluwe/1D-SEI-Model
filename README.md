@@ -9,9 +9,10 @@ This model simulates the growth of the SEI (*S*olid *E*lectrolyte *I*nterphase) 
 The model is built upon the capabilities in the [Cantera](cantera.org) software suite, which facilitates incorporating chemical complexity in an efficient, theoretically-robust manner.
 
 The model incorporates the following phenomena:
--Charge transfer reactions at the tungsten-electrolyte, tungsten-SEI and SEI-electrolyte interfaces.
--Capacitive double layer charging at the tungsten-electrolyte, tungsten-SEI and SEI-electrolyte interfaces.
--Diffusion and migration of charged and uncharged species within the electrolyte and SEI.
+
+- Charge transfer reactions at the tungsten-electrolyte, tungsten-SEI and SEI-electrolyte interfaces.
+- Capacitive double layer charging at the tungsten-electrolyte, tungsten-SEI and SEI-electrolyte interfaces.
+- Diffusion and migration of charged and uncharged species within the electrolyte and SEI.
 
 The model is written in python, and makes use of several python modules, which you will need to download before running the model.  See the header for the file `SEI_prelim1D.py` for a list of these modules.  We highly recommend using [Conda](conda.io) to manage the various dependencies.
 
