@@ -14,12 +14,21 @@ The model incorporates the following phenomena:
 - Capacitive double layer charging at the tungsten-electrolyte, tungsten-SEI and SEI-electrolyte interfaces.
 - Diffusion and migration of charged and uncharged species within the electrolyte and SEI.
 
-The model is written in python, and makes use of several python modules, which you will need to download before running the model.  See the header for the file `SEI_prelim1D.py` for a list of these modules.  We highly recommend using [Conda](conda.io) to manage the various dependencies.
+The model is written in python, and makes use of several python modules, which you will need to download before running the model.  See the header for the file `sei_1d_model.py` for a list of these modules.  We highly recommend using [Conda](conda.io) to manage the various dependencies.
 
-To run the model, simply download the files in this directory, install the necessary dependencies, alter the input parameters as desired, and then run from a command line via the command:
+To run the model, simply::
+1. Download the files in this directory,
+2. Install the necessary dependencies
+3. Open `sei_1d_model.py` and alter the input parameters as desired, and
+4. Run from a command line via the command:
 
 ```
-python SEI_prelim1D.py
+python sei_1d_model.py
 ```
 
 You can also run the same file from any number of python-baseed IDEs.
+
+For advanced operation, you can edit the thermo-chemistry in the cantera input
+(CTI) file (which is currently `W_anode_chem.cti`).  It is recommended to copy
+and save the file under a new name before editing, rather than directly
+overwriting the present file.
