@@ -23,7 +23,7 @@ metal(name = "conductor",
 
 incompressible_solid(name = "electrolyte",
     elements = " C H O Li E F P ",
-    species = " Li+(e) PF6-(e) EC(e) EMC(e) Ethylene(e) CO(e) CO2(e) EthyleneGlycol(e) H2O(e)",
+    species = "Li+(e) PF6-(e) EC(e) EMC(e) Ethylene(e) CO(e) CO2(e) EthyleneGlycol(e) H2O(e)",
     density = (1208.2, 'kg/m3'),
     initial_state 	= state(mole_fractions = 'Li+(e):7.8730103237e-2, PF6-(e):7.8730103237e-2, EC(e):2.8328131770e-1, EMC(e):5.5913078694e-1, H2O(e):1.0e-4'))
 
@@ -35,9 +35,9 @@ incompressible_solid(name = "electrolyte_old",
 
 incompressible_solid(name = "SEI",
     elements = " Li C O H E ",
-    species = " (dummy) Li2CO3(SEI) Li2O(SEI) LEDC(SEI) ",
+    species = " (dummy_sei) Li2CO3(SEI) Li2O(SEI) LEDC(SEI) ",
     density = (2200, 'kg/m3'),
-    initial_state = state(mole_fractions = '(dummy):1.0',temperature=300))
+    initial_state = state(mole_fractions = '(dummy_sei):1.0',temperature=300))
 
 ideal_interface(name = "tungsten_SEI_surf",
     elements = " E ",
@@ -90,6 +90,9 @@ species( name = "solvent",   atoms = " ",
         thermo = const_cp(h0 = (0.0, 'kcal/mol')))
 
 species( name = "(dummy)",   atoms = " ",
+        thermo = const_cp(h0 = (0.0, 'kcal/mol')))
+
+species( name = "(dummy_sei)",   atoms = " Li:1 ",
         thermo = const_cp(h0 = (0.0, 'kcal/mol')))
 
 species( name = "Li(e)",
@@ -210,14 +213,12 @@ species( name = "(int)", atoms = "")
 #-------------------------------------------------------------------------------
 #  Reaction data 
 #-------------------------------------------------------------------------------
-k_f_1 = 1e12
-k_f_2 = 1e6
+k_f_1 = 3e-1
+k_f_2 = 8e8
 k_f_3 = 1e12
-k_f_4 = 1e7
+k_f_4 = 5e0
 
 #edge_reaction("2 EC(e) + 2 electron + 2 Li+(e) <=> LEDC(SEI) + Ethylene(e) ", [k_f_3, 0.0, 0.0], #id="an_elyte_int-3",beta=0.5)
-
-edge_reaction("2 EC(e) + 2 e(SEI) + 2 Li+(e) <=> LEDC(SEI) + Ethylene(e) ", [k_f_3, 0.0, 0.0], id="SEI_elyte_int-3",beta=0.5)
 
 edge_reaction("EC(e) + 2 electron + 2 Li+(e) <=> Ethylene(e) + Li2CO3(SEI)  ", [k_f_1, 0.0, 0.0], id="an_elyte_int-1",beta=0.5)
 
@@ -225,7 +226,9 @@ edge_reaction("EC(e) + 2 e(SEI) + 2 Li+(e) <=> Ethylene(e) + Li2CO3(SEI)  ", [k_
 
 edge_reaction("Li2CO3(SEI) + 2 Li+(e) + 2 e(SEI) <=> 2 Li2O(SEI) + CO(e) ", [k_f_2, 0.0, 0.0], id="SEI_elyte_int-2", beta=0.5 )
 
-surface_reaction("LEDC(SEI) + H2O(e) => Li2CO3(SEI) + CO2(e) + EthyleneGlycol(e)",[k_f_4, 0.0, 0.0], id="SEI_elyte_int-3")
+edge_reaction("2 EC(e) + 2 e(SEI) + 2 Li+(e) <=> LEDC(SEI) + Ethylene(e) ", [k_f_3, 0.0, 0.0], id="SEI_elyte_int-3",beta=0.5)
+
+surface_reaction("LEDC(SEI) + H2O(e) <=> Li2CO3(SEI) + CO2(e) + EthyleneGlycol(e)",[k_f_4, 0.0, 0.0], id="SEI_elyte_int-3")
 
 surface_reaction("e(SEI) <=> electron", [1e-12, 0.0, 0.0], id="an_SEI_int-1")
 
