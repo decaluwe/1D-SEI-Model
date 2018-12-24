@@ -157,6 +157,7 @@ if check_profile:
 vol_k_sei = sei.molecular_weights/rho_k_SEI
 
 params = {'phi bounds':phi_bounds, 'Rate':R, 'Ny':N_y, 'dyInv':1./dy, \
-    'd_sei':d_sei, 'TP':TP_o, 'vol_k sei':vol_k_sei, 'C_dl WE_sei':C_dl_WE_SEI}
+    'd_sei':d_sei, 'TP':TP_o, 'vol_k sei':vol_k_sei, \
+    'C_dl WE_sei':C_dl_WE_SEI, 'sigma sei':sigma_el}
 voltage_lookup = {'time':times, 'voltage':voltage_array}
 """----------Run solver----------"""

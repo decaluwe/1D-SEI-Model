@@ -21,7 +21,8 @@ from assimulo.solvers import IDA
 from assimulo.problem import Implicit_Problem
 
 print('\n     Importing inputs and intializing.')
-from sei_1d_init import SV_0, SV_dot_0, SVptr, times, objs, params
+from sei_1d_init import SV_0, SV_dot_0, SVptr, times, objs, params,  \
+    voltage_lookup
 
 print('\n     Running simulation\n')
 # Set up problem instance
@@ -29,8 +30,8 @@ SEI_1D = Implicit_Problem(residual, SV_0, SV_dot_0)
 
 # Define simulation parameters
 simulation = IDA(SEI_1D)                # Create simulation instance
-simulation.atol = 1e-8                  # Solver absolute tolerance
-simulation.rtol = 1e-6                  # Solver relative tolerance
+simulation.atol = 1e-7                  # Solver absolute tolerance
+simulation.rtol = 1e-4                  # Solver relative tolerance
 #simulation.maxh = 0.1                   # Solver max step size
 
 # Set simulation end time, slope flag (for anode voltage cycle), and run simulation
@@ -55,17 +56,33 @@ names = list()
 for i in range(1,sei.n_species):
     names.append(sei.species_names[i])
 names.append('eps_sei')
+names.append('Anode potential')
+names.append('SEI potential')
+
+phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
+phi_SEI = phi_WE + SV[:,SVptr['phi sei'][0]]
 
 fig, ax1 = plt.subplots(1, 1, figsize=(10, 9))
 ax1.plot(t,SV[:,SVptr['Ck sei'][0,1:].astype(int)])
 ax1.plot(t,SV[:,SVptr['eps sei'][0]])
+ax1.plot(t,phi_WE)
+ax1.plot(t,phi_SEI)
 ax1.legend(names)
+ax1.set_ylabel('Molar concentration (kmol/m3), Vol fraction, Electric potential (V)')
+ax1.set_xlabel('time (s)')
+#plt.show()
+"""plt.savefig('Figure1.pdf',format='pdf',dpi=350)"""
 
 profiles = SV[-1,SVptr['Ck sei'][:,1:]]
 fig2, ax2 = plt.subplots(1, 1, figsize=(10, 9))
-ax2.plot(range(params['Ny']),profiles)
-ax2.plot(range(params['Ny']),SV[-1,SVptr['eps sei']])
+ax2.plot(1e9*np.arange(params['Ny'])/params['dyInv'],profiles)
+ax2.plot(1e9*np.arange(params['Ny'])/params['dyInv'],SV[-1,SVptr['eps sei']])
 ax2.legend(names)
+ax2.set_ylabel('Molar concentration (kmol/m3)')
+ax2.set_xlabel('SEI Depth (from anode, nm)')
+plt.show()
+"""plt.savefig('Figure2.pdf',format='pdf',dpi=350)"""
+
 
 
 #ax3.plot(t, SV_df['c_elyte1_00'], label = elyte_species[0, 0])
@@ -90,7 +107,8 @@ ax2.set_ylabel('Anode Potential [V]')
 ax2.set_xlabel('Time [s]')
 ax2.set_title('Anode voltage over time')"""
 
-plt.show()
+
+
 
 #SV_plot = SV_df.plot()
 #SV_plot.legend(loc = 'upper left')

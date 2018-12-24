@@ -2,7 +2,7 @@
 """
 Created on Thu May 17 18:49:06 2018
 
-@author: Daniel Korff
+@author: Daniel Korff and Steven C. DeCaluwe
 
 This code takes in an empty solution vector for tracking temperature,
 concentration, and potential of 2 species based on the grid used in the top
@@ -15,8 +15,7 @@ import cantera as ct
 """----------Residual function for IDA solver----------"""
 def residual(t, SV, SV_dot):
     from sei_1d_init import objs, params, voltage_lookup, SVptr
-    # Tag global variables in residual function
-    print(t)
+
     # Initialize residual equal to all zeros:
     res = SV_dot
 
@@ -39,13 +38,15 @@ def residual(t, SV, SV_dot):
 
     # Set anode and anode/electrolyte interface potentials
     WE.electric_potential = phi_WE
+    j=0
 
-    "TEMPORARY:"
+    phi_sei_loc = phi_WE + SV[SVptr['phi sei'][j]]
+    sei.electric_potential = phi_sei_loc
+    sei_conductor.electric_potential = phi_sei_loc
 
-    sei.electric_potential = phi_WE + SV[SVptr['phi sei'][0]]
-    sei_conductor.electric_potential = phi_WE + SV[SVptr['phi sei'][0]]
+    eps_sei_loc = SV[SVptr['eps sei'][j]]
 
-    i_sei[0] = WE_sei.get_net_production_rates(WE)*ct.faraday
+    i_sei[j] = eps_sei_loc*WE_sei.get_net_production_rates(WE)*ct.faraday
 
 
     """Ck_sei_loc = SV[SVptr['Ck sei'][j]]
@@ -74,7 +75,7 @@ def residual(t, SV, SV_dot):
     dSVdt_eps_sei = np.dot(dSVdt_ck_sei, params['vol_k sei'])
     res[SVptr['eps sei'][j]] = SV_dot[SVptr['eps sei'][j]] - dSVdt_eps_sei"""
     rxn_scale = 1
-    for j in range(params['Ny']):
+    for j in range(params['Ny']-1):
 
         Ck_sei_loc = SV[SVptr['Ck sei'][j]]
         #print(Ck_sei_loc)
@@ -83,11 +84,10 @@ def residual(t, SV, SV_dot):
         sei.TDX = None, rho_sei_loc, Xk_sei_loc
 
         elyte.electric_potential = 0.
-        Ck_elyte_loc = SV[SVptr['Ck elyte'][j]]
+        #Ck_elyte_loc = SV[SVptr['Ck elyte'][j]]
 
-        eps_sei_loc = SV[SVptr['eps sei'][j]]
         # SEI surface Area Per unit Volume (APV)
-        A_sei_APV = 4.*eps_sei_loc*(1-eps_sei_loc)/params['d_sei']
+        sei_APV = 4.*eps_sei_loc*(1-eps_sei_loc)/params['d_sei']
 
         #anode_elyte.electric_potential = phi_anode
         #elyte.electric_potential = 0
@@ -96,7 +96,7 @@ def residual(t, SV, SV_dot):
     #    S_dot_elyte = anode_elyte.net_production_rates[elyte_rate_ind]
         #S_dot_SEI = anode_elyte.net_production_rates[SEI_rate_ind]
         #print(sei_elyte.get_net_production_rates(sei))
-        Rates_sei_elyte = sei_elyte.get_net_production_rates(sei)*A_sei_APV
+        Rates_sei_elyte = sei_elyte.get_net_production_rates(sei)*sei_APV
         dSVdt_ck_sei = rxn_scale*Rates_sei_elyte
         res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
 
@@ -106,13 +106,50 @@ def residual(t, SV, SV_dot):
         # Calculate faradaic current density due to charge transfer at SEI-elyte
         #   interface, in A/m2 total.
         Rates_sei_conductor = sei_elyte.get_net_production_rates(sei_conductor)
-        i_Far[j] = Rates_sei_conductor*A_sei_APV/params['dyInv']
+        i_Far[j] = Rates_sei_conductor*sei_APV/params['dyInv']
+
+        phi_sei_next = SV[SVptr['phi sei'][j+1]]
+        dPhi = phi_sei_loc - phi_sei_next
+
+        eps_sei_next = SV[SVptr['eps sei'][j+1]]
+        eps_sei_int = 0.5*(eps_sei_loc + eps_sei_next)
+        i_sei[j+1] = eps_sei_int*params['sigma sei']*dPhi
 
         # Rates for next node are scaled by sei volume fraction in this node:
         rxn_scale = eps_sei_loc
+        eps_sei_loc = eps_sei_next
 
-    i_dl = i_sei[0] - i_sei[1] - i_Far[0]
+
+    i_dl = i_Far[0] - i_sei[0]# + i_sei[1] - i_sei[0]
     dSVdt_phi_dl = -i_dl/params['C_dl WE_sei']
+    res[SVptr['phi sei'][0]] = SV_dot[SVptr['phi sei'][0]] - dSVdt_phi_dl
+
+    j = int(params['Ny']-1)
+    Ck_sei_loc = SV[SVptr['Ck sei'][j]]
+    rho_sei_loc = abs(np.dot(Ck_sei_loc,sei.molecular_weights))
+    Xk_sei_loc = Ck_sei_loc/sum(Ck_sei_loc)
+    sei.TDX = None, rho_sei_loc, Xk_sei_loc
+
+    elyte.electric_potential = 0.
+    #Ck_elyte_loc = SV[SVptr['Ck elyte'][j]]
+
+    # SEI surface Area Per unit Volume (APV)
+    sei_APV = 4.*eps_sei_loc*(1-eps_sei_loc)/params['d_sei']
+
+    #anode_elyte.electric_potential = phi_anode
+    #elyte.electric_potential = 0
+
+    # Retreive net production rates of species from cantera
+#    S_dot_elyte = anode_elyte.net_production_rates[elyte_rate_ind]
+    #S_dot_SEI = anode_elyte.net_production_rates[SEI_rate_ind]
+    #print(sei_elyte.get_net_production_rates(sei))
+    Rates_sei_elyte = sei_elyte.get_net_production_rates(sei)*sei_APV
+    dSVdt_ck_sei = rxn_scale*Rates_sei_elyte
+    res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
+
+    dSVdt_eps_sei = np.dot(dSVdt_ck_sei, params['vol_k sei'])
+    res[SVptr['eps sei'][j]] = SV_dot[SVptr['eps sei'][j]] - dSVdt_eps_sei
+
     """res[0] = SV_dot[0]
     res[1] = SV_dot[1]
     res[2] = SV_dot[2]
