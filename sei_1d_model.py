@@ -52,6 +52,7 @@ t, SV, SV_dot = simulation.simulate(t_f)
 
 #fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 9))
 sei = objs['SEI']
+elyte = objs['elyte']
 names = list()
 for i in range(1,sei.n_species):
     names.append(sei.species_names[i])
@@ -80,9 +81,32 @@ ax2.plot(1e9*np.arange(params['Ny'])/params['dyInv'],SV[-1,SVptr['eps sei']])
 ax2.legend(names)
 ax2.set_ylabel('Molar concentration (kmol/m3)')
 ax2.set_xlabel('SEI Depth (from anode, nm)')
-plt.show()
+#plt.show()
 """plt.savefig('Figure2.pdf',format='pdf',dpi=350)"""
+t = np.asarray(t)
+t.shape = (t.shape[0],1)
+print(t.shape)
+print(SV.shape)
+data = np.concatenate((np.array(t),SV),1)
+np.savetxt('Output/Model1.csv',data.T,delimiter=",")
 
+SVnames = list()
+#SVnames.append('time')
+SVnames.append('phi SEI')
+SVnames.append('phi elyte')
+SVnames.append('eps SEI')
+
+for i in range(1,sei.n_species):
+    SVnames.append(sei.species_names[i])
+
+for i in range(1,elyte.n_species):
+    SVnames.append(elyte.species_names[i])
+
+
+SV_names = np.tile(SVnames, params['Ny'])
+np.savetxt('names.csv',SV_names,delimiter=",", fmt="%s")
+
+plt.show()
 
 
 #ax3.plot(t, SV_df['c_elyte1_00'], label = elyte_species[0, 0])

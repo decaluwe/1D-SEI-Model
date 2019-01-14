@@ -12,7 +12,7 @@ the species in a discretized grid employing a finite volume method.
 import numpy as np
 
 "Identify cti file:"
-ctifile = 'W_anode_chem.cti'
+ctifile = 'W_anode_chem_01072019.cti'
 
 # Phase names in cti file
 elyte_phase = 'electrolyte'
@@ -44,7 +44,7 @@ CE_surfphase = 'Li_surf'
 # cell.
 #
 N_x = 1         # USER INPUT number of grids in plane of electrode
-N_y = 5        # USER INPUT number of grids perpendicular to electrode
+N_y = 50        # USER INPUT number of grids perpendicular to electrode
 x = 1           # USER INPUT x length of domain [m]
 y = 5e-8        # USER INPUT y length of domain [m]
 d_sei = 5e-9    # USER INPUT d_SEI representative diameter of SEI grain [m]
@@ -83,7 +83,7 @@ SEI properties:
 """
 # Mass density [kg of k per m3 of k] requires knowing order of species in cti
 #   file.
-rho_k_SEI = [1e-20, 2110, 2013, 1321]
+rho_k_SEI = [1e-20, 2110, 2013, 1321, 2635]
 # Electrical Resistivity [S/m]
 sigma_el = 1e-6
 
