@@ -8,7 +8,7 @@ on a non-intercalating anode (in this case, tungsten).
 
 *Note: This is a 'frozen' version of the code, used to generate the figures in the ECS 
 Interface article from the Spring 2019 Data Science issue, is saved in the 
-`ECS_Interface` folder. *
+`ECS_Interface` folder.*
 
 The model is built upon the capabilities in the [Cantera](cantera.org) software
 suite, which facilitates incorporating chemical complexity in an efficient,
