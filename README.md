@@ -35,4 +35,4 @@ overwriting the present file.
 
 *Note: A 'frozen' version of the code, used to generate the figures in the ECS 
 Interface article from the Spring 2019 Data Science issue, is saved in the 
-`ECS_Interface` folder. *
+`ECS_Interface` folder.*
