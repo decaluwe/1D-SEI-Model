@@ -6,6 +6,10 @@
 This model simulates the growth of the SEI (*S*olid *E*lectrolyte *I*nterphase)
 on a non-intercalating anode (in this case, tungsten).
 
+*Note: This is a 'frozen' version of the code, used to generate the figures in the ECS 
+Interface article from the Spring 2019 Data Science issue, is saved in the 
+`ECS_Interface` folder. *
+
 The model is built upon the capabilities in the [Cantera](cantera.org) software
 suite, which facilitates incorporating chemical complexity in an efficient,
 theoretically-robust manner.
@@ -38,7 +42,3 @@ For advanced operation, you can edit the thermo-chemistry in the cantera input
 (CTI) file (which is currently `W_anode_chem_01072019.cti`).  It is recommended
 to copy and save the file under a new name before editing, rather than directly
 overwriting the present file.
-
-*Note: A 'frozen' version of the code, used to generate the figures in the ECS 
-Interface article from the Spring 2019 Data Science issue, is saved in the 
-`ECS_Interface` folder. *
