@@ -25,6 +25,8 @@ sei_elyte_surfphase = 'SEI_electrolyte_surf'
 CE_phase = 'Lithium'
 CE_surfphase = 'Li_surf'
 
+"Optional: give a name to the output folder"
+save_name = ''
 """----------Define grid dimensions----------"""
 
 # A (2,10) grid will be indexed as shown below with each node having the
@@ -44,7 +46,7 @@ CE_surfphase = 'Li_surf'
 # cell.
 #
 N_x = 1         # USER INPUT number of grids in plane of electrode
-N_y = 50        # USER INPUT number of grids perpendicular to electrode
+N_y = 10        # USER INPUT number of grids perpendicular to electrode
 x = 1           # USER INPUT x length of domain [m]
 y = 5e-8        # USER INPUT y length of domain [m]
 d_sei = 5e-9    # USER INPUT d_SEI representative diameter of SEI grain [m]
@@ -60,9 +62,9 @@ Define CV parameters:
 """
 sweep_rate = 0.01  #...Voltage sweep rate [V/s]
 sweep_dirn_0 = -1
-phi_0 = 1.0;
-phi_1 = 0.05;
-phi_2 = 1.5;
+phi_0 = 1.0
+phi_1 = 0.05
+phi_2 = 1.5
 n_cycles = 0.5
 
 # If you want to verify that the electric potential input looks correct before

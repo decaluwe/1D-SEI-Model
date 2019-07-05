@@ -19,10 +19,12 @@ from sei_1d_functions import df_2spec2var
 import cantera as ct
 from assimulo.solvers import IDA
 from assimulo.problem import Implicit_Problem
+import os
+from read_write_save_funcs import *
 
 print('\n     Importing inputs and intializing.')
 from sei_1d_init import SV_0, SV_dot_0, SVptr, times, objs, params,  \
-    voltage_lookup
+    voltage_lookup, save_name, ctifile
 
 print('\n     Running simulation\n')
 # Set up problem instance
@@ -88,7 +90,24 @@ t.shape = (t.shape[0],1)
 print(t.shape)
 print(SV.shape)
 data = np.concatenate((np.array(t),SV),1)
-np.savetxt('Output/Model1.csv',data.T,delimiter=",")
+
+# Read out current working directory:
+cwd = os.getcwd()
+try:
+    os.chdir(cwd + '/output')
+except:
+    os.mkdir(cwd + '/output')  
+    os.chdir(cwd + '/output')
+
+
+
+import datetime
+    
+
+folder_name = os.getcwd()+'/'+save_name+datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
+
+#np.savetxt('output/Model1.csv',data.T,delimiter=",")
 
 SVnames = list()
 #SVnames.append('time')
@@ -104,9 +123,13 @@ for i in range(1,elyte.n_species):
 
 
 SV_names = np.tile(SVnames, params['Ny'])
-np.savetxt('names.csv',SV_names,delimiter=",", fmt="%s")
+#np.savetxt('names.csv',SV_names,delimiter=",", fmt="%s")
 
-plt.show()
+
+SaveFiles(folder_name, ctifile, data.T, SVnames)
+#os.chdir(cwd + '/output/' + folder_name)
+
+#plt.show()
 
 
 #ax3.plot(t, SV_df['c_elyte1_00'], label = elyte_species[0, 0])

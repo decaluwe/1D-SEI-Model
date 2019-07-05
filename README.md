@@ -5,7 +5,7 @@
 
 ### *Note: A 'frozen' version of this code, used to generate the figures in the ECS Interface article from the Spring 2019 Data Science issue, is saved in the `ECS_Interface` folder.*
 
-This model simulates the growth of the SEI (*S*olid *E*lectrolyte *I*nterphase) on a non-intercalating anode (in this case, tungsten).
+This model simulates the growth of the SEI (**S**olid **E**lectrolyte **I**nterphase) on a non-intercalating anode (in this case, tungsten).
 
 The model is built upon the capabilities in the [Cantera](cantera.org) software suite, which facilitates incorporating chemical complexity in an efficient, theoretically-robust manner.
 
