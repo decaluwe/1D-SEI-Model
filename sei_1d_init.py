@@ -1,20 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed May 16 14:52:05 2018
-@author: Steven C. DeCaluwe, Daniel Korff
+""" Import user inputs and initialize cantera objects, dictionaries for 
+parameters, pointers, etc, and set up the initial solution vector arrays"""
+ "-------------------------------------------------------------------------"
 
-This code is the foundation (top level script) for a model of solid-electrolye-
-interface (SEI) formation in a Li-ion battery (LIB). This is a preliminary
-model that will consider one species in the SEI, one species in the
-electrolyte, and track temperature, concentration, and electrical potential of
-the species in a discretized grid employing a finite volume method.
-"""
-
-# %% Modules imported
+# Import modules:
 import numpy as np
 from matplotlib import pyplot as plt
 import cantera as ct
 
+# Import user inputs:
 from sei_1d_inputs import *
 
 """----------Geometry calcs----------"""
@@ -74,8 +68,8 @@ print('\n')
 # ---------------------------------------------------------------------------
 
 num_SEI_species = sei.n_species
-C_k_sei = np.zeros_like(sei.X)
-C_k_sei[sei.species_index('(dummy_sei)')] = 1e-10
+C_k_sei = sei.concentrations
+C_k_sei[sei.species_index('LEDC(SEI)')] = 1e-10
 
 print("The species in the SEI are:")
 print('\n'.join(sei.species_names))
@@ -116,7 +110,8 @@ eps_0 += 1e-6
 # ---------------------------------------------------------------------------
 # Initialize solution vector using np.zeros based on number of the variables
 # ---------------------------------------------------------------------------
-SV_node = np.concatenate((np.array((phi_SEI_dl_0, phi_elyte_0, eps_0)), C_k_sei, C_k_elyte))
+# SV_node = np.concatenate((np.array((phi_SEI_dl_0, phi_elyte_0, eps_0)), C_k_sei, C_k_elyte))
+SV_node = np.concatenate((np.array((phi_0+phi_SEI_dl_0, phi_elyte_0, eps_0)), C_k_sei, C_k_elyte))
 SV_0 = np.tile(SV_node, N_y)
 SV_dot_0 = np.zeros_like(SV_0)
 res = np.zeros_like(SV_0)
@@ -160,4 +155,3 @@ params = {'phi bounds':phi_bounds, 'Rate':R, 'Ny':N_y, 'dyInv':1./dy, \
     'd_sei':d_sei, 'TP':TP_o, 'vol_k sei':vol_k_sei, \
     'C_dl WE_sei':C_dl_WE_SEI, 'sigma sei':sigma_el}
 voltage_lookup = {'time':times, 'voltage':voltage_array}
-"""----------Run solver----------"""

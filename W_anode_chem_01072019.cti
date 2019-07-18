@@ -29,9 +29,9 @@ incompressible_solid(name = "electrolyte",
 
 incompressible_solid(name = "SEI",
     elements = " Li C O H F E ",
-    species = " (dummy_sei) Li2CO3(SEI) Li2O(SEI) LEDC(SEI) LiF(SEI) ",
+    species = " Li2CO3(SEI) Li2O(SEI) LEDC(SEI) LiF(SEI) ",
     density = (2200, 'kg/m3'),
-    initial_state = state(mole_fractions = '(dummy_sei):1.0',temperature=300))
+    initial_state = state(mole_fractions = 'LEDC(SEI):1.0',temperature=300))
 
 ideal_interface(name = "tungsten_SEI_surf",
     elements = " E ",
@@ -231,15 +231,15 @@ species( name = "(int)", atoms = "")
 #  Reaction data 
 #-------------------------------------------------------------------------------
 
-k_f_1 = 8e14
-k_f_2 = 8e0
-k_f_3 = 0.5e12
-k_f_4 = 30e-1
+k_f_1 = 8e15
+k_f_2 = 8e-1
+k_f_3 = 0.5e9
+k_f_4 = 3e3
 k_f_5 = 3e9
-k_f_6 = 5e8
+k_f_6 = 5e6
 
-#edge_reaction("2 EC(e) + 2 electron + 2 Li+(e) <=> LEDC(SEI) + Ethylene(e) ", [k_f_3, 0.0, 0.0], #id="an_elyte_int-3",beta=0.5)
-#edge_reaction("EC(e) + 2 electron + 2 Li+(e) <=> Ethylene(e) + Li2CO3(SEI)  ", [k_f_1, 0.0, 0.0], #id="an_elyte_int-1",beta=0.5)
+#edge_reaction("2 EC(e) + 2 electron + 2 Li+(e) <=> LEDC(SEI) + Ethylene(e) ", [k_f_1, 0.0, 0.0], #id="an_elyte_int-3",beta=0.5)
+#edge_reaction("EC(e) + 2 electron + 2 Li+(e) <=> Ethylene(e) + Li2CO3(SEI)  ", [k_f_2, 0.0, 0.0], #id="an_elyte_int-1",beta=0.5)
 
 
 
@@ -251,7 +251,7 @@ edge_reaction("Li2CO3(SEI) + 2 Li+(e) + 2 e(SEI) <=> 2 Li2O(SEI) + CO(e) ", [k_f
 
 
 
-#surface_reaction("LEDC(SEI) + H2O(e) <=> Li2CO3(SEI) + CO2(e) + EthyleneGlycol(e)",[k_f_4, 0.0, 0.0], id="SEI_elyte_int-4")
+surface_reaction("LEDC(SEI) + H2O(e) <=> Li2CO3(SEI) + CO2(e) + EthyleneGlycol(e)",[k_f_4, 0.0, 0.0], id="SEI_elyte_int-4")
 
 
 
@@ -260,5 +260,5 @@ edge_reaction("Li2CO3(SEI) + 2 Li+(e) + 2 e(SEI) <=> 2 Li2O(SEI) + CO(e) ", [k_f
 #edge_reaction("Li2CO3(SEI) + 2 HF(e) <=> 2 LiF(SEI) + H2CO3(e) ", [k_f_6, 0., 0.], id="SEI_elyte_int-6") 
 
 
-surface_reaction("e(SEI) <=> electron", [1e-15, 0.0, 0.0], id="an_SEI_int-1")
+surface_reaction("e(SEI) <=> electron", [1e-14, 0.0, 0.0], id="an_SEI_int-1")
 

@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed May 16 14:52:05 2018
-@author: Steven C. DeCaluwe, Daniel Korff
-
-This code is the foundation (top level script) for a model of solid-electrolye-
-interface (SEI) formation in a Li-ion battery (LIB). This is a preliminary
-model that will consider one species in the SEI, one species in the
-electrolyte, and track temperature, concentration, and electrical potential of
-the species in a discretized grid employing a finite volume method.
+User inputs for 1-D SEI model.
 """
+"-------------------------------------------------------------------------"
 import numpy as np
 
 "Identify cti file:"
@@ -27,6 +21,7 @@ CE_surfphase = 'Li_surf'
 
 "Optional: give a name to the output folder"
 save_name = ''
+
 """----------Define grid dimensions----------"""
 
 # A (2,10) grid will be indexed as shown below with each node having the
@@ -46,20 +41,17 @@ save_name = ''
 # cell.
 #
 N_x = 1         # USER INPUT number of grids in plane of electrode
-N_y = 10        # USER INPUT number of grids perpendicular to electrode
+N_y = 15        # USER INPUT number of grids perpendicular to electrode
 x = 1           # USER INPUT x length of domain [m]
-y = 5e-8        # USER INPUT y length of domain [m]
-d_sei = 5e-9    # USER INPUT d_SEI representative diameter of SEI grain [m]
-# %% Define state variables
+y = 3e-8        # USER INPUT y length of domain [m]
+d_sei = 3e-9    # USER INPUT d_SEI representative diameter of SEI grain [m]
 
 """----------Initial state variables----------"""
 T_0 = np.array([300.])      # USER INPUT initial temperature [K], assumed uniform
 P_0 = 101325.               # USER INPUT defines initial pressure.
 eps_0 = np.array([0.])      # initial volume fraction of SEI
 
-"""
-Define CV parameters:
-"""
+"""----------Define CV parameters:----------"""
 sweep_rate = 0.01  #...Voltage sweep rate [V/s]
 sweep_dirn_0 = -1
 phi_0 = 1.0
@@ -70,26 +62,18 @@ n_cycles = 0.5
 # If you want to verify that the electric potential input looks correct before
 #     running the simulation, switch this to '1'
 check_profile = 0
-#
-#...For these half-cell simulations, let us assume a constant cathode
-#       voltage for our energy storage and efficiency calcs:
-phi_CE = 0.0; #...(V)yte interface
 
 #...Initial electric potential of SEI, relative to WE:
 phi_SEI_dl_0 = 0.
 #...Initial electric potential of electrolyte:
 phi_elyte_0 = 0.
 
-"""
-SEI properties:
-"""
+"""----------SEI properties:----------"""
 # Mass density [kg of k per m3 of k] requires knowing order of species in cti
 #   file.
-rho_k_SEI = [1e-20, 2110, 2013, 1321, 2635]
-# Electrical Resistivity [S/m]
-sigma_el = 1e-6
+rho_k_SEI = [2110, 2013, 1321, 2635]
+# Electrical Conductivity [S/m]
+sigma_el = 1e-7
 
-"""
-Double layer capacitances
-"""
-C_dl_WE_SEI = 2e-4  # F/m2
+# Double layer capacitances
+C_dl_WE_SEI = 2e-6  # F/m2
