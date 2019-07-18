@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Import user inputs and initialize cantera objects, dictionaries for 
 parameters, pointers, etc, and set up the initial solution vector arrays"""
- "-------------------------------------------------------------------------"
+"-------------------------------------------------------------------------"
 
 # Import modules:
 import numpy as np

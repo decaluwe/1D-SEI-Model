@@ -41,7 +41,7 @@ save_name = ''
 # cell.
 #
 N_x = 1         # USER INPUT number of grids in plane of electrode
-N_y = 15        # USER INPUT number of grids perpendicular to electrode
+N_y =10        # USER INPUT number of grids perpendicular to electrode
 x = 1           # USER INPUT x length of domain [m]
 y = 3e-8        # USER INPUT y length of domain [m]
 d_sei = 3e-9    # USER INPUT d_SEI representative diameter of SEI grain [m]

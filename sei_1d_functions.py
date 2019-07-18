@@ -90,6 +90,7 @@ def residual(t, SV, SV_dot):
         eps_sei_int = 0.5*(eps_sei_loc + eps_sei_next)
     
         # Current = (Conductivity)*(volume fraction)*(-grad(Phi))
+        dPhi = phi_sei_loc - phi_sei_next
         i_sei[j+1] = eps_sei_int*params['sigma sei']*dPhi
 
         # Rates for next node are scaled by sei volume fraction in this node:
