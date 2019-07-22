@@ -7,8 +7,11 @@ This model simulates the growth of the SEI (*S*olid *E*lectrolyte *I*nterphase)
 on a non-intercalating anode (in this case, tungsten).
 
 *Note: This is a 'frozen' version of the code, used to generate the figures in the ECS 
-Interface article from the Spring 2019 Data Science issue, is saved in the 
-`ECS_Interface` folder.*
+Interface article from the Spring 2019 Data Science issue. Please note that this 
+implementation is for demonstration purposes only - there are additional features yet
+to be implemented, and the thermodynamics and reaction rates presented in the cti file
+are not based on anything in particular (i.e. they are neither based on previous literature
+nor fit to any data.*
 
 The model is built upon the capabilities in the [Cantera](cantera.org) software
 suite, which facilitates incorporating chemical complexity in an efficient,
@@ -33,7 +36,7 @@ To run the model, simply::
 4. Run from a command line via the command:
 
 ```
-python model/sei_1d_model.py
+python sei_1d_model.py
 ```
 
 You can also run the same file from any number of python-baseed IDEs.
