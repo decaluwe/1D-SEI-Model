@@ -49,9 +49,8 @@ def residual(t, SV, SV_dot):
 
         # Read out local SEI composition and set Cantera object:
         Ck_sei_loc = SV[SVptr['Ck sei'][j]]
-        rho_sei_loc = abs(np.dot(Ck_sei_loc,sei.molecular_weights))
         Xk_sei_loc = Ck_sei_loc/sum(Ck_sei_loc)
-        sei.TDX = None, rho_sei_loc, Xk_sei_loc
+        sei.X = Xk_sei_loc
 
         # SEI electric potential:
         phi_sei_loc =  SV[SVptr['phi sei'][j]]
@@ -91,19 +90,19 @@ def residual(t, SV, SV_dot):
     
         # Current = (Conductivity)*(volume fraction)*(-grad(Phi))
         dPhi = phi_sei_loc - phi_sei_next
-        i_sei[j+1] = eps_sei_int*params['sigma sei']*dPhi
+        sigma_sei = np.dot(params['sigma sei'],sei.X)
+        i_sei[j+1] = eps_sei_int*sigma_sei*dPhi
 
         # Rates for next node are scaled by sei volume fraction in this node:
-        rxn_scale = eps_sei_loc
+        rxn_scale = 0.5*(eps_sei_loc+eps_sei_next)
         eps_sei_loc = eps_sei_next
 
     # Repeat calculations for final node, where the boundary condition is
     #   that i_sei = 0 at the interface with the electrolyte:
     j = int(params['Ny']-1)
     Ck_sei_loc = SV[SVptr['Ck sei'][j]]
-    rho_sei_loc = abs(np.dot(Ck_sei_loc,sei.molecular_weights))
     Xk_sei_loc = Ck_sei_loc/sum(Ck_sei_loc)
-    sei.TDX = None, rho_sei_loc, Xk_sei_loc
+    sei.X = Xk_sei_loc
 
     elyte.electric_potential = 0.
 

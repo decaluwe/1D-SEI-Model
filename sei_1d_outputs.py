@@ -1,88 +1,16 @@
 """
-The following functions were created to read/write variable values from/to .csv
-files. Use of these functions allows simple saving and reading of these 
-variables regardless of their storage method.
-
-A SaveFiles function was also added to easily create copies of files used to 
-run the model. This allows the user to go back and check how the solution was 
-calculated at that time even if the current version of the model has been 
-updated to fix bugs or incorporate additional physics.
+Output functions for 1-D SEI model.
 """
-
-
-
-""" Read and Write w.r.t. Modules """
 "-----------------------------------------------------------------------------"
-def ModuleWriter(file, module):
-    import types, csv
-    
-    f = open(file, 'w')
-    w = csv.writer(f, lineterminator='\n')
-    
-    for item in dir(module):
-        if not item.startswith("__"):
-            if type(vars(module)[item]) != types.ModuleType:
-                w.writerow([item, vars(module)[item]])
+"""
+Contents of this module:
 
-    f.close()
-    
-def ModuleReader(file):
-    import csv, numpy
-    
-    f = open(file, 'r')
-    reader = csv.reader(f)
-     
-    d = {}
-    for row in reader:
-        k, v = row
-        
-        if '[' not in v:
-            try:
-                d[k] = eval(v)
-            except:
-                d[k] = v
-        else:
-            d[k] = " ".join(v.split()).replace(' ',', ')
-            d[k] = numpy.asarray(eval(d[k]))
-    
-    f.close()
-    
-    return d
-    
-    
-    
-""" Read and Write w.r.t. Dictionaries """
-"-----------------------------------------------------------------------------"
-def DictWriter(file, dictionary):
-    import csv
-    
-    f = open(file, 'w')
-    w = csv.writer(f, lineterminator='\n')
-    
-    for k,v in dictionary.items():
-        w.writerow([k,v])
-        
-    f.close()
-    
-def DictReader(file):
-    import csv, numpy
-    
-    f = open(file, 'r')
-    reader = csv.reader(f)
-     
-    p = {}
-    for row in reader:
-        k, v = row
-        
-        if '[' not in v:
-            p[k] = eval(v)
-        else:
-            p[k] = " ".join(v.split()).replace(' ',', ')
-            p[k] = numpy.asarray(eval(p[k]))
-    
-    f.close()
-    
-    return p
+prepare_data:  creates numpy arrays for ouputing the data and the solution 
+    vector variable names
+
+
+
+"""
 
 """ Create output arrays for the data and the variable names """
 "-----------------------------------------------------------------------------"
@@ -145,6 +73,7 @@ def SaveFiles(save_name, ctifile, data, names):
     copy2(cwd + '/sei_1d_functions.py', folder_name)
     copy2(cwd + '/sei_1d_init.py', folder_name)
     copy2(cwd + '/sei_1d_model.py', folder_name)
+    copy2(cwd + '/sei_1d_outputs.py', folder_name)
     #ModuleWriter(cwd + '/' + folder_name + '/user_inputs.csv', user_inputs)
     
     # Save the current cti files into new folder:
@@ -161,7 +90,9 @@ def SaveFiles(save_name, ctifile, data, names):
     np.savetxt(folder_name +'/solution.csv', data, delimiter=',')
     np.savetxt(folder_name+'/names.csv',names,delimiter=",", fmt="%s")
     
-  
+
+""" Create data frame of output data """
+"-----------------------------------------------------------------------------"  
 # The function below will apply column labels to the data frame sol_vec
 def output_names(sol_vec,N_x,N_y,len_sol_vec,track_vars,track_temp,num_species):
     # Initialize base strings
@@ -249,6 +180,9 @@ def output_names(sol_vec,N_x,N_y,len_sol_vec,track_vars,track_temp,num_species):
     # Return cleaned up solution vector to top level script
     return sol_vec
 
+
+""" Plot data """
+"-----------------------------------------------------------------------------"
 def plot_data(t, SV, SVptr, objs, params):
     from sei_1d_init import voltage_lookup
     from matplotlib import pyplot as plt
@@ -271,25 +205,70 @@ def plot_data(t, SV, SVptr, objs, params):
     fig, ax1 = plt.subplots(1, 1, figsize=(10, 9))
     ax1.plot(t,SV[:,SVptr['Ck sei'][0,:].astype(int)])
     ax1.legend(names)
-    ax1.set_ylabel('Molar concentration (kmol/m3), Vol fraction, Electric potential (V)')
+    ax1.set_ylabel('Molar concentration (kmol/m3) in first SEI layer.')
     ax1.set_xlabel('time (s)')
     """plt.savefig('Figure1.pdf',format='pdf',dpi=350)"""
 
     fig2, ax2 = plt.subplots(1, 1, figsize=(10, 9))
+    depths = list()
     for i in range(params['Ny']):
         ax2.plot(t,SV[:,SVptr['eps sei'][i]])
+        depths.append(str((round(1e9*(i+0.5)/params['dyInv'],2))))
+        
+    ax2.set_xlabel('time (s)')
+    ax2.set_ylabel('Volume fraction of SEI')
+    ax2.legend(depths)
 
-    fig3, ax3 = plt.subplots(1, 1, figsize=(10, 9))
-    ax3.plot(t,phi_WE)
-    for i in range(params['Ny']):
-        ax3.plot(t,SV[:,SVptr['phi sei'][i]])
+    
+    if 0:
+        v_names= list()
+        v_names.append('W anode')
+        v_names.append(depths)
+        fig3, ax3 = plt.subplots(1, 1, figsize=(10, 9))
+        ax3.plot(t,phi_WE)
+        for i in range(params['Ny']):
+            ax3.plot(t,SV[:,SVptr['phi sei'][i]])
 
-    profiles = SV[-1,SVptr['Ck sei']]
+        ax3.set_xlabel('time (s)')
+        ax3.set_ylabel('SEI Electric Potential (V)')
+        ax3.legend(depths)
+
+
+    #profiles = SV[-1,SVptr['Ck sei']]
+    Volfracs = np.zeros_like(SV[-1,SVptr['Ck sei']])
+    for i,Ck in enumerate(SV[-1,SVptr['Ck sei']]):
+        V_k = Ck*params['vol_k sei']
+        Volfracs[i,:] = V_k/np.sum(V_k)*SV[-1,SVptr['eps sei'][i]]
+        
     fig4, ax4 = plt.subplots(1, 1, figsize=(10, 9))
-    ax4.plot(1e9*np.arange(params['Ny'])/params['dyInv'],profiles)
+    ax4.plot(1e9*np.arange(params['Ny'])/params['dyInv'],Volfracs)#profiles)
     ax4.plot(1e9*np.arange(params['Ny'])/params['dyInv'],SV[-1,SVptr['eps sei']])
     ax4.legend(names)
-    ax4.set_ylabel('Molar concentration (kmol/m3)')
+    ax4.set_ylabel('Volume fractions')
     ax4.set_xlabel('SEI Depth (from anode, nm)')
+
     plt.show()
+
     """plt.savefig('Figure2.pdf',format='pdf',dpi=350)"""
+
+
+""" Calculate and print any desired quantities: """
+"-----------------------------------------------------------------------------"
+def reporting(t, SV, SVptr, params):
+
+    import numpy as np
+    t_SEI = 0
+    R_SEI = 0
+    for i in range(params['Ny']):
+        if SV[-1,SVptr['eps sei'][i]] > 5e-2:
+            t_SEI += 1./params['dyInv']
+
+        X_k = SV[-1,SVptr['Ck sei'][i]]/np.sum(SV[-1,SVptr['Ck sei'][i]])
+        sigma_loc = np.dot(params['sigma sei'],X_k)*SV[-1,SVptr['eps sei'][i]]
+        R_SEI += 1./params['dyInv']/sigma_loc
+
+
+
+    print('SEI electronic resistance is ', R_SEI,'\n')
+
+    print('SEI thickness is ', t_SEI,'\n')
