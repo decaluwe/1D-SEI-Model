@@ -6,8 +6,8 @@ User inputs for 1-D SEI model.
 import numpy as np
 
 "Identify cti file:"
-ctifile = 'W_anode_chem_07242019.cti'
-#ctifile = 'W_anode_chem_Carelli.cti'
+#ctifile = 'W_anode_chem_07242019.cti'
+ctifile = 'W_anode_chem_Carelli.cti'
 
 # Phase names in cti file
 elyte_phase = 'electrolyte'
