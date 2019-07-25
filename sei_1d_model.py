@@ -4,10 +4,13 @@ Created on Wed May 16 14:52:05 2018
 @author: Steven C. DeCaluwe, Daniel Korff
 
 This code is the foundation (top level script) for a model of solid-electrolye-
-interface (SEI) formation in a Li-ion battery (LIB). This is a preliminary
-model that will consider one species in the SEI, one species in the
-electrolyte, and track temperature, concentration, and electrical potential of
-the species in a discretized grid employing a finite volume method.
+interface (SEI) formation in a Li-ion battery (LIB). The model is set to track
+the electric potential, cheical composition, and volume fraction of an SEI as 
+it grows in 1 dimension through a series of discretized finite volumes.
+
+While the model's solution vector also stores the electrolyte composition, at
+present (July 24, 2019), there is no functionality in the model which considers
+eveolution of the electrolyte state variables throughout the simulation domain.
 """
 
 #  Import all necessary modules
@@ -16,7 +19,6 @@ from sei_1d_functions import residual
 import cantera as ct
 from assimulo.solvers import IDA
 from assimulo.problem import Implicit_Problem
-import os
 from sei_1d_outputs import *
 
 print('\n     Importing inputs and intializing.')

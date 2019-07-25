@@ -6,8 +6,8 @@ User inputs for 1-D SEI model.
 import numpy as np
 
 "Identify cti file:"
-ctifile = 'W_anode_chem_07242019.cti'
-#ctifile = 'W_anode_chem_Carelli.cti'
+#ctifile = 'W_anode_chem_07242019.cti'
+ctifile = 'W_anode_chem_Carelli.cti'
 
 # Phase names in cti file
 elyte_phase = 'electrolyte'
@@ -58,16 +58,16 @@ eps_0 = np.array([0.])      # initial volume fraction of SEI
 sweep_rate = 0.01  #...Voltage sweep rate [V/s]
 sweep_dirn_0 = -1
 phi_0 = 1.0
-phi_1 = 0.5
+phi_1 = 0.05# 0.5
 phi_2 = 1.5
-n_cycles = 0
+n_cycles = 1.5
 
 phi_hold = 0.5  #...Anode electric potential to hold after sweep is done [V]
-t_hold = 1800   #...length of hold [s]
+t_hold = 0#1800   #...length of hold [s]
 
 # If you want to verify that the electric potential input looks correct before
 #     running the simulation, switch this to '1'
-check_profile = 1
+check_profile = 0
 
 #...Initial electric potential of SEI, relative to WE:
 phi_SEI_dl_0 = 0.

@@ -1,0 +1,264 @@
+
+#----------------------------------------------------------------------
+#	Graphite Anode for Li-ion battery simulations
+#		S. DeCaluwe, Colorado School of Mines
+#		11-05-2014
+#----------------------------------------------------------------------
+
+units(length = "m", time = "s", quantity = "kmol", act_energy = "kJ/mol")
+
+
+metal(name = "tungsten",
+    elements = "E" ,
+    species = " electron ",
+    density = (1925, 'kg/m3'),
+    initial_state = state(mole_fractions = 'electron:1.0'))
+
+metal(name = "conductor",
+    elements = "E" ,
+    species = " e(SEI) ",
+    density = (1925, 'kg/m3'),
+    initial_state = state(mole_fractions = 'e(SEI):1.0'))
+
+
+#-------------------------------------------------------------------------------
+# Edit these phases and any involved species, as desired:
+
+
+IdealSolidSolution(name = "electrolyte",
+    elements = " C H O Li E F P ",
+    species = "bulk[C3H4O3] bulk[C4H8O3] LipElyt PF6mElyt C2H6O2(el) H2O(el) C2H4 CO CO2",
+    density = (1208.2, 'kg/m3'),
+    initial_state = state(pressure = OneAtm, mole_fractions = 'bulk[C3H4O3]:0.52 bulk[C4H8O3]:0.3398 LipElyt:0.07 PF6mElyt:0.07 C2H6O2(el):0 H2O(el):1e-4'),  # bulk[C3H4O3]=EC, bulk[C4H8O3]=EMC
+    standard_concentration = "unity"
+)
+
+IdealSolidSolution(name = "SEI",
+    elements = " Li C O H E ",
+    species = "LEDC[SEI] Li2CO3[SEI] Li2O[SEI]",
+    density = (2200, 'kg/m3'),
+    initial_state =  state(mole_fractions = 'LEDC[SEI]:0.8 Li2CO3[SEI]:1e-1 Li2O[SEI]:1e-1',temperature = 300.00),
+    standard_concentration = "unity",
+)
+
+#-------------------------------------------------------------------------------
+
+ideal_interface(name = "tungsten_SEI_surf",
+    elements = " E ",
+    species = "(dummy)",
+    site_density = 1.0,
+    reactions = "an_SEI_int-*",
+    phases = " tungsten SEI conductor")
+
+ideal_interface(name = "tungsten_electrolyte_surf",
+    elements = " E ",
+    species = "(dummy)",
+    site_density = 1.0e-9,
+    reactions = "an_elyte_int-*",
+    phases = " tungsten electrolyte SEI ")
+
+ideal_interface(name = "SEI_electrolyte_surf",
+    elements = " E ",
+    species = "(dummy)",
+    site_density = 1.0,
+    reactions = "SEI_elyte_int-*",
+    phases = " SEI electrolyte conductor ")
+
+metal(name="Lithium",
+    elements = "Li E",
+    species = "Li electron",
+    density = (534.0, 'kg/m3'))
+
+
+ideal_interface(
+	name 		= "Li_surf",
+	elements 	= " ",
+	species	= "(dummy)",
+	reactions	= "lithium-*",
+	site_density = (2.50e-6,'mol/cm2'),	
+	phases	= "Lithium electrolyte"
+	)
+ 
+#-----------------------------------------------------------------------------
+#  Species data
+#
+#-----------------------------------------------------------------------------
+species(name = "LipElyt",
+        atoms =	"Li:1 E:-1",
+        thermo = const_cp(h0 = (0.0, 'J/mol'), s0 = (0.0, 'J/mol/K')),
+        standardState = constantIncompressible(molarVolume = (5.2, 'cm3/gmol')))
+
+species(name = "PF6mElyt",
+        atoms = "P:1 F:6 E:1",
+        thermo = const_cp(h0 = (0.0, 'J/mol'), s0 = (0.0, 'J/mol/K')),
+        standardState = constantIncompressible(molarVolume = (9.4, 'cm3/gmol')))
+
+species(name = "bulk[C3H4O3]",
+        atoms = "C:3 H:4 O:3",
+        thermo = NASA([180.00, 1000.00], [-6.9763, 0.1003, -0.00008, 0.0, 0.0, -7.11E+04, 34.5]),
+#       thermo 		= const_cp(h0 = (315.6, 'kJ/mol'), s0 = (0.0, 'J/mol/K')),
+        standardState = constantIncompressible(molarVolume = (69.33, 'cm3/gmol')))
+
+species(name = "bulk[C4H8O3]",
+        atoms = "C:4 H:8 O:3",
+        thermo = const_cp(h0 =(0.0, 'J/mol'), s0 = (0.0, 'J/mol/K')),
+        standardState = constantIncompressible(molarVolume = (81.97, 'cm3/gmol'))) #EMC is not used for calculation
+
+species(name = "LEDC[SEI]",
+        atoms = "C:4 H:4 O:6 Li:2",
+        thermo = const_cp(h0 = (-1374.288, 'kJ/mol'), s0 = (88.78, 'J/mol/K')), #kupper
+#       thermo = const_cp(h0 = (107.4, 'kJ/mol'), s0 = (0.0, 'J/mol/K')),
+        standardState = constantIncompressible(molarVolume = ((4*12.011+4*1.0079+6*15.9994+2*6.941)/2.200, 'cm3/mol')))
+
+species(name = "Li2CO3[SEI]",
+        atoms = "Li:2 C:1 O:3",
+        thermo = const_cp(h0 = (-1214.115, 'kJ/mol'), s0 = (90.071, 'J/mol/K')), #kupper
+#       thermo = const_cp(h0 = (207.4, 'kJ/mol'), s0 = (0.0, 'J/mol/K')),
+        standardState = constantIncompressible(molarVolume = ((2*6.941+12.011+3*15.9994)/2.200, 'cm3/mol')))
+
+species(name = "Li2O[SEI]",
+	    atoms = "Li:2, O:1",
+        thermo = const_cp(h0 = (-597.9, 'kJ/mol'), s0 = (37.6, 'J/mol/K')), #CRC
+#	    thermo = const_cp(h0 = (500.4, 'kJ/mol'), s0 = (0.0, 'J/mol/K')),
+  	    standardState = constantIncompressible(molarVolume = ((2*6.941+15.9994)/2.200, 'cm3/mol')))
+
+species(name = "N2",
+        atoms = "N:2",
+        thermo = (NASA([ 300.00,1000.00],[3.298677E+00,1.4082404E-03,-3.963222E-06,5.6415150E-09,-2.444854E-12,-1.0208999E+03,3.950372E+00]),
+                  NASA([1000.00,5000.00],[2.926640E+00,1.4879768E-03,-5.684760E-07,1.0097038E-10,-6.753351E-15,-9.2279770E+02,5.980528E+00])),
+        transport = gas_transport(geom = "linear", diam = 3.62, well_depth = 97.53, polar = 1.76, rot_relax = 4.00),
+        note = "121286")
+
+species(name = "C2H4",
+        atoms = "C:2 H:4",
+        thermo = (NASA([ 200.00,1000.00],[3.95920148E+00,-7.57052247E-03, 5.70990292E-05,-6.91588753E-08, 2.69884373E-11,5.08977593E+03,4.09733096E+00]),
+                  NASA([1000.00,3500.00],[2.03611116E+00, 1.46454151E-02,-6.71077915E-06, 1.47222923E-09,-1.25706061E-13,4.93988614E+03,1.03053693E+01])),
+        transport = gas_transport(geom = "nonlinear", diam = 3.97, well_depth = 280.80, rot_relax = 1.50),
+        note = "L 1/91",
+        standardState = constantIncompressible(molarVolume = (28.05/0.0018, 'cm3/gmol')))
+        #thermo = const_cp(h0 = (52.5, 'kJ/mol'), s0 = (0.0, 'J/mol/K')))
+
+species(name = "C2H6O2(el)",  
+        atoms = "C:2, H:6, O:2",
+        thermo = const_cp(h0 = (-460.0, 'kJ/mol'), s0 = (163.2, 'J/mol/K')), #CRC
+	  # thermo = const_cp(h0 = (52.5, 'kJ/mol'), s0 = (0.0, 'J/mol/K')),       #const_cp(h0 = (-392.2, 'kJ/mol'), s0 = (303.8, 'J/mol/K'))) #gas, if liquid h: -460/s: 163.2
+        standardState = constantIncompressible(molarVolume = (62.07/1.11, 'cm3/gmol')))
+
+species(name = "CO2", atoms = "C:1  O:2",
+        thermo = (NASA([ 200.00,1000.00],[2.35677352E+00,8.98459677E-03,-7.12356269E-06,2.45919022E-09,-1.43699548E-13,-4.83719697E+04,9.90105222E+00]),
+                  NASA([1000.00,3500.00],[3.85746029E+00,4.41437026E-03,-2.21481404E-06,5.23490188E-10,-4.72084164E-14,-4.87591660E+04,2.27163806E+00])),
+        transport = gas_transport(geom = "linear", diam = 3.76, well_depth = 244.00, polar = 2.65, rot_relax = 2.10),
+        note = "L 7/88",
+        standardState = constantIncompressible(molarVolume = (44.01/0.002, 'cm3/gmol')))
+
+species(name = "CO", atoms = "C:1 O:1",
+        thermo = (NASA([ 200.00,1000.00],[3.57953347E+00,-6.10353680E-04, 1.01681433E-06,9.07005884E-10,-9.04424499E-13,-1.43440860E+04,3.50840928E+00]),
+                  NASA([1000.00,3500.00],[2.71518561E+00, 2.06252743E-03,-9.98825771E-07,2.30053008E-10,-2.03647716E-14,-1.41518724E+04,7.81868772E+00])),
+        transport = gas_transport(geom = "linear", diam = 3.65, well_depth = 98.10, polar = 1.95, rot_relax = 1.80),
+        note = "TPIS79",
+        standardState = constantIncompressible(molarVolume = (28.01/0.0014, 'cm3/gmol')))
+
+species(name = "H2O(el)",
+        atoms = " H:2  O:1 ",
+        thermo = const_cp(h0 = (-285.8, 'kJ/mol'), s0 = (70.0, 'J/mol/K')), #CRC
+    #   thermo = (
+    #    NASA( [  273.16,  1000.00], [  4.198640560E+00,  -2.036434100E-03,
+    #             6.520402110E-06,  -5.487970620E-09,   1.771978170E-12,
+    #            -3.029372670E+04,  -8.490322080E-01] ),
+    #    NASA( [ 1000.00,  1600.00], [  3.033992490E+00,   2.176918040E-03,
+    #            -1.640725180E-07,  -9.704198700E-11,   1.682009920E-14,
+    #            -3.000429710E+04,   4.966770100E+00] ) ) ,
+         standardState = constantIncompressible(molarVolume = (18.01, 'cm3/gmol')))
+
+species( name = "electron",   atoms = "E:1",
+        thermo = const_cp(h0 = (0.0, 'kcal/mol')))
+
+
+species( name = "e(SEI)",   atoms = "E:1",
+        thermo = const_cp(h0 = (0.0, 'kJ/mol')))#-22.8
+
+species( name = "solvent",   atoms = " ",
+        thermo = const_cp(h0 = (0.0, 'kcal/mol')))
+
+species( name = "(dummy)",   atoms = " ",
+        thermo = const_cp(h0 = (0.0, 'kcal/mol')))
+
+species( name = "(dummy_sei)",   atoms = " Li:1 ",
+        thermo = const_cp(h0 = (0.0, 'kcal/mol')))
+
+species( name = "Li(e)",
+    atoms = " Li:1 E:-1 ",
+    thermo = const_cp(h0 = (0.0, 'kcal/mol')))
+
+
+species(	
+	name 		= "HF(e)",
+	atoms 		= "H:1, F:1 ",
+	thermo 		= const_cp(h0 = (0.0, 'kJ/mol'), s0 = (0.0, 'J/mol/K')))
+
+
+species(	
+	name 		= "EDC(e)",
+	atoms 		= "C:4, H:6, O:6",
+	thermo 		= const_cp(h0 = (0.0, 'kJ/mol'), s0 = (0.0, 'J/mol/K')))
+
+
+species(	
+	name 		= "H2CO3(e)",
+	atoms 		= "C:1, H:2, O:3",
+	thermo 		= const_cp(h0 = (0.0, 'kJ/mol'), s0 = (0.0, 'J/mol/K')))
+
+
+species(	
+	name 		= "Li",
+	atoms 		= "Li:1",
+	thermo 		= const_cp(cp0 = (0.0, 'J/mol/K'), h0 = (0.0, 'kJ/mol'), s0 = (0.0, 'J/mol/K')))
+
+
+
+# dummy species for anode/electrolyte interface
+species( name = "(int)", atoms = "")
+
+
+#-------------------------------------------------------------------------------
+#  Reaction data 
+#-------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------
+# Edit these k_f values and edit/replace these reactions, as desired:
+
+scale= 3.3e12
+k_f_1 = scale*5e-4
+k_f_2 = scale*3e-8
+k_f_3 = scale*5e-8
+k_f_4 = scale*2.5e-18
+# k_f_5 = 3e9
+# k_f_6 = 5e6
+
+
+edge_reaction("LipElyt +  bulk[C3H4O3] +  e(SEI) <=> 0.5 C2H4 + 0.5 LEDC[SEI]", [k_f_1, 0.0, (55.5, 'kJ/mol')], id="SEI_elyte_int-1",beta=0.5)
+
+edge_reaction("2 LipElyt + bulk[C3H4O3] + 2 e(SEI) <=> Li2CO3[SEI] + C2H4", [k_f_2, 0.0, (0.0, 'kJ/mol')], id="SEI_elyte_int-2", beta=0.5 )
+
+edge_reaction("2 LipElyt + Li2CO3[SEI] + 2 e(SEI) <=>  2 Li2O[SEI] + CO", [k_f_3, 0.0, (0.0, 'kJ/mol')], id="SEI_elyte_int-3", beta=0.5 )
+
+surface_reaction("LEDC[SEI] + H2O(el) <=> Li2CO3[SEI] + CO2 +  C2H6O2(el)",[k_f_4, 0.0, (0.0, 'kJ/mol')], id="SEI_elyte_int-4")
+
+#edge_reaction("LEDC(SEI) + 2 HF(e) <=> 2 LiF(SEI) + EDC(e) ", [k_f_5, 0., 0.], id="SEI_elyte_int-5") 
+
+#edge_reaction("Li2CO3(SEI) + 2 HF(e) <=> 2 LiF(SEI) + H2CO3(e) ", [k_f_6, 0., 0.], id="SEI_elyte_int-6") 
+
+#-------------------------------------------------------------------------------
+
+
+
+# Don't touch this reaction
+surface_reaction("e(SEI) <=> electron", [1e-14, 0.0, 0.0], id="an_SEI_int-1")
+
+
+
+
+#edge_reaction("2 EC(e) + 2 electron + 2 Li+(e) <=> LEDC(SEI) + Ethylene(e) ", [k_f_1, 0.0, 0.0], #id="an_elyte_int-3",beta=0.5)
+#edge_reaction("EC(e) + 2 electron + 2 Li+(e) <=> Ethylene(e) + Li2CO3(SEI)  ", [k_f_2, 0.0, 0.0], #id="an_elyte_int-1",beta=0.5)
+

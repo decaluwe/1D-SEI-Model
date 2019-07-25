@@ -263,9 +263,9 @@ def reporting(t, SV, SVptr, params):
         if SV[-1,SVptr['eps sei'][i]] > 5e-2:
             t_SEI += 1./params['dyInv']
 
-            X_k = SV[-1,SVptr['Ck sei'][i]]/np.sum(SV[-1,SVptr['Ck sei'][i]])
-            sigma_loc = np.dot(params['sigma sei'],X_k)*SV[-1,SVptr['eps sei'][i]]
-            R_SEI += 1./params['dyInv']/sigma_loc
+        X_k = SV[-1,SVptr['Ck sei'][i]]/np.sum(SV[-1,SVptr['Ck sei'][i]])
+        sigma_loc = np.dot(params['sigma sei'],X_k)*SV[-1,SVptr['eps sei'][i]]
+        R_SEI += 1./params['dyInv']/sigma_loc
 
 
 
