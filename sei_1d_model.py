@@ -17,7 +17,7 @@ import cantera as ct
 from assimulo.solvers import IDA
 from assimulo.problem import Implicit_Problem
 import os
-from sei_1d_outputs import *
+from input_output_funcs import *
 
 print('\n     Importing inputs and intializing.')
 
@@ -64,8 +64,6 @@ SaveFiles(save_name, ctifile, data.T, data_names)
 
 # Plot the data
 plot_data(t, SV, SVptr, objs, params)
-
-reporting(t, SV, SVptr, params)
 
 print("\n     Goodbye")
 

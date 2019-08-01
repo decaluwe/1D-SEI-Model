@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Import user inputs and initialize cantera objects, dictionaries for 
+""" Import user inputs and initialize cantera objects, dictionaries for
 parameters, pointers, etc, and set up the initial solution vector arrays"""
 "-------------------------------------------------------------------------"
 
@@ -12,9 +12,9 @@ import cantera as ct
 from sei_1d_inputs import *
 
 """----------Geometry calcs----------"""
-dx = x/N_x          # USER INPUT length of step in x direction
-dy = d_sei          # Length of volume in y-direction equals user input for average grain size.
-N_y = int(y/dy)     # Number of y volumes
+dx = x/N_x      # USER INPUT length of step in x direction
+dy = d_sei
+N_y  = int(y/dy)     # USER INPUT length of step in y direction
 
 """----------Create Cantera objects----------"""
 CE, elyte, sei, sei_conductor, WE = ct.import_phases(ctifile, \
@@ -70,6 +70,9 @@ print('\n')
 
 num_SEI_species = sei.n_species
 C_k_sei = sei.concentrations
+#C_k_sei[sei.species_index('LEDC[SEI]')] = 1e-6
+#C_k_sei[sei.species_index('Li2O[SEI]')] = 1e-6
+#C_k_sei[sei.species_index('Li2CO3[SEI]')] = 1e-6
 
 print("The species in the SEI are:")
 print('\n'.join(sei.species_names))
@@ -126,9 +129,12 @@ R = sweep_rate                            # Sweep rate [V/s]
 t_event0 = -sweep_dirn_0*(phi_0 - phi_bounds[int(0.5*(1. + sweep_dirn_0))])/(R)
 dt = (phi_bounds[1] - phi_bounds[0])/R
 t_events = np.arange(t_event0,t_event0+dt*(2*n_cycles+1),dt)
-times = np.concatenate((np.array([0.]),t_events))#,
-t_final = t_events[-1]+t_hold
-times = np.concatenate((times,np.array([t_final])))
+times = np.concatenate((np.array([0.]),t_events),)
+
+t_hold_init = times[-1] + 1e-6
+t_hold_final = times[-1] + t_hold
+
+times = np.concatenate((times,(t_hold_init,),(t_hold_final,)))
 
 voltage_array = np.zeros_like(times)
 voltage_array[0] = phi_0
@@ -138,7 +144,7 @@ for i, t in enumerate(t_events):
     voltage_array[i+1] = voltage_array[i] + direction*(t - times[i])*R
     direction *= -1
 
-voltage_array[-1] = phi_hold
+voltage_array[-2:] = phi_hold
 
 t = np.linspace(0,times[-1],500)
 v = np.interp(t,times,voltage_array)

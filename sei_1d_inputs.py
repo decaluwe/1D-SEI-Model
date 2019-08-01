@@ -6,8 +6,8 @@ User inputs for 1-D SEI model.
 import numpy as np
 
 "Identify cti file:"
-#ctifile = 'W_anode_chem_07242019.cti'
 ctifile = 'W_anode_chem_Carelli.cti'
+#ctifile = 'W_anode_chem_01072019.cti'
 
 # Phase names in cti file
 elyte_phase = 'electrolyte'
@@ -21,7 +21,7 @@ CE_phase = 'Lithium'
 CE_surfphase = 'Li_surf'
 
 "Optional: give a name to the output folder"
-save_name = ''
+save_name = 'Serena_'
 
 """----------Define grid dimensions----------"""
 
@@ -45,9 +45,8 @@ N_x = 1         # USER INPUT number of grids in plane of electrode
 x = 1           # USER INPUT x length of domain [m]
 y = 2.4e-8        # USER INPUT y length of domain [m]
 
-# DON"T TOUCH :)
-d_sei = 2e-9    # USER INPUT d_SEI representative diameter of sperhical SEI grain [m]  
-# NOTE -- this also serves as the thickness of a discretzied volume in the y-direction.
+#   DON'T TOUCH
+d_sei = 2e-9    # USER INPUT d_SEI representative diameter of SEI grain [m]
 
 """----------Initial state variables----------"""
 T_0 = np.array([300.])      # USER INPUT initial temperature [K], assumed uniform
@@ -60,14 +59,16 @@ sweep_dirn_0 = -1
 phi_0 = 1.0
 phi_1 = 0.5
 phi_2 = 1.5
-n_cycles = 0
+n_cycles = 0.
 
-phi_hold = 0.5  #...Anode electric potential to hold after sweep is done [V]
-t_hold = 1800   #...length of hold [s]
+t_hold = 1800.
+phi_hold = 0.5
+
+
 
 # If you want to verify that the electric potential input looks correct before
 #     running the simulation, switch this to '1'
-check_profile = 1
+check_profile = 0
 
 #...Initial electric potential of SEI, relative to WE:
 phi_SEI_dl_0 = 0.
@@ -76,7 +77,7 @@ phi_elyte_0 = 0.
 
 """----------SEI properties:----------"""
 # Mass density [kg of k per m3 of k] requires knowing order of species in cti
-#   file.  Current species order: Li2CO3(SEI) Li2O(SEI) LEDC(SEI)
+#   file.
 rho_k_SEI = [2110, 2013, 1321]
 # Electrical Conductivity [S/m]
 sigma_el = [1.5e-6, 5e-8, 1e-10]
