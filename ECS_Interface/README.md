@@ -36,7 +36,7 @@ To run the model, simply::
 4. Run from a command line via the command:
 
 ```
-python sei_1d_model.py
+python model/sei_1d_model.py
 ```
 
 You can also run the same file from any number of python-baseed IDEs.
