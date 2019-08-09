@@ -17,12 +17,12 @@ import cantera as ct
 from assimulo.solvers import IDA
 from assimulo.problem import Implicit_Problem
 import os
-from input_output_funcs import *
+from sei_1d_outputs import *
 
 print('\n     Importing inputs and intializing.')
 
-# This function imports all user inputs, creates all needed 
-#    Cantera objects, dictionaries for parameters, pointers, etc., and 
+# This function imports all user inputs, creates all needed
+#    Cantera objects, dictionaries for parameters, pointers, etc., and
 #    initializes the solution vector.
 from sei_1d_init import SV_0, SV_dot_0, SVptr, times, objs, params,  \
     save_name, ctifile
@@ -60,7 +60,6 @@ data, data_names = prepare_data(SV, t, objs, params)
 
 # Save the data:
 SaveFiles(save_name, ctifile, data.T, data_names)
-#os.chdir(cwd + '/output/' + folder_name)
 
 # Plot the data
 plot_data(t, SV, SVptr, objs, params)

@@ -5,6 +5,9 @@ User inputs for 1-D SEI model.
 "-------------------------------------------------------------------------"
 import numpy as np
 
+# Choose 'detailed' or 'homogeneous':
+mode = 'detailed'
+
 "Identify cti file:"
 ctifile = 'W_anode_chem_Carelli.cti'
 #ctifile = 'W_anode_chem_01072019.cti'
@@ -21,7 +24,7 @@ CE_phase = 'Lithium'
 CE_surfphase = 'Li_surf'
 
 "Optional: give a name to the output folder"
-save_name = 'Serena_'
+save_name = 'Serena_Final_Detailed_'
 
 """----------Define grid dimensions----------"""
 
@@ -61,7 +64,7 @@ phi_1 = 0.5
 phi_2 = 1.5
 n_cycles = 0.
 
-t_hold = 1800.
+t_hold = 3600.
 phi_hold = 0.5
 
 
@@ -80,7 +83,7 @@ phi_elyte_0 = 0.
 #   file.
 rho_k_SEI = [2110, 2013, 1321]
 # Electrical Conductivity [S/m]
-sigma_el = [1.5e-6, 5e-8, 1e-10]
+sigma_el = [1.5e-8, 4e-8, 9e-8]
 
 # Double layer capacitances
 C_dl_WE_SEI = 2e-6  # F/m2

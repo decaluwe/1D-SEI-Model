@@ -11,11 +11,6 @@ import cantera as ct
 # Import user inputs:
 from sei_1d_inputs import *
 
-"""----------Geometry calcs----------"""
-dx = x/N_x      # USER INPUT length of step in x direction
-dy = d_sei
-N_y  = int(y/dy)     # USER INPUT length of step in y direction
-
 """----------Create Cantera objects----------"""
 CE, elyte, sei, sei_conductor, WE = ct.import_phases(ctifile, \
     [CE_phase, elyte_phase, sei_phase, sei_conductorphase, WE_phase])
@@ -50,7 +45,6 @@ objs = {'WE':WE, 'SEI':sei, 'elyte':elyte, 'CE':CE, 'conductor':sei_conductor, \
     'WE_SEI':WE_sei, 'WE_elyte':WE_elyte, 'SEI_elyte':sei_elyte, \
     'CE_Elyte':CE_elyte}
 
-
 """----------Define electrolyte species----------"""
 
 # ---------------------------------------------------------------------------
@@ -83,41 +77,53 @@ print('\n'.join(sei.species_names))
 
 SVptr = {}
 
-"""     sei/elyte domain    """
-# 1 variable for sei volume fraction
-# 1 variable for sei electric potential
-# 1 variable for elyte electric potential
-# 1 variable for each species in sei and elyte
-nvars_node = 3 + sei.n_species + elyte.n_species
+if mode == 'detailed':
+    """----------Geometry calcs----------"""
+    dx = x/N_x      # USER INPUT length of step in x direction
+    dy = d_sei
+    N_y  = int(y/dy)     # USER INPUT length of step in y direction
 
-SVptr['phi sei'] = np.arange(0,nvars_node*N_y,nvars_node,dtype='int')
-SVptr['phi elyte'] = np.arange(1,nvars_node*N_y,nvars_node,dtype='int')
-SVptr['eps sei'] = np.arange(2,1+nvars_node*N_y,nvars_node,dtype='int')
-SVptr['Ck sei'] = np.ndarray(shape=(N_y,sei.n_species),dtype='int')
-SVptr['Ck elyte'] = np.ndarray(shape=(N_y,elyte.n_species),dtype='int')
-for i in range(N_y):
-    SVptr['Ck sei'][i,:] = np.arange(3+i*nvars_node,\
-        3+i*nvars_node+sei.n_species,dtype=int)
-    SVptr['Ck elyte'][i,:] = range(3+i*nvars_node+sei.n_species,\
-        3+i*nvars_node+sei.n_species+elyte.n_species)
+    """     sei/elyte domain    """
+    # 1 variable for sei volume fraction
+    # 1 variable for sei electric potential
+    # 1 variable for elyte electric potential
+    # 1 variable for each species in sei and elyte
+    nvars_node = 3 + sei.n_species + elyte.n_species
+
+    SVptr['phi sei'] = np.arange(0,nvars_node*N_y,nvars_node,dtype='int')
+    SVptr['phi elyte'] = np.arange(1,nvars_node*N_y,nvars_node,dtype='int')
+    SVptr['eps sei'] = np.arange(2,1+nvars_node*N_y,nvars_node,dtype='int')
+    SVptr['Ck sei'] = np.ndarray(shape=(N_y,sei.n_species),dtype='int')
+    SVptr['Ck elyte'] = np.ndarray(shape=(N_y,elyte.n_species),dtype='int')
+    for i in range(N_y):
+        SVptr['Ck sei'][i,:] = np.arange(3+i*nvars_node,\
+            3+i*nvars_node+sei.n_species,dtype=int)
+        SVptr['Ck elyte'][i,:] = range(3+i*nvars_node+sei.n_species,\
+            3+i*nvars_node+sei.n_species+elyte.n_species)
 
 
-# ---------------------------------------------------------------------------
-# Now use the total number of tracked variables per node to calculate the
-# length of the solution vector based on discretization and tracked variables
-# ---------------------------------------------------------------------------
-nvars_tot = N_x*(1 + N_y*nvars_node)
+    # ---------------------------------------------------------------------------
+    # Now use the total number of tracked variables per node to calculate the
+    # length of the solution vector based on discretization and tracked variables
+    # ---------------------------------------------------------------------------
+    nvars_tot = N_x*(1 + N_y*nvars_node)
 
-eps_0 += 1e-6
+    eps_0 += 1e-6
 
-# ---------------------------------------------------------------------------
-# Initialize solution vector using np.zeros based on number of the variables
-# ---------------------------------------------------------------------------
-# SV_node = np.concatenate((np.array((phi_SEI_dl_0, phi_elyte_0, eps_0)), C_k_sei, C_k_elyte))
-SV_node = np.concatenate((np.array((phi_0+phi_SEI_dl_0, phi_elyte_0, eps_0)), C_k_sei, C_k_elyte))
-SV_0 = np.tile(SV_node, N_y)
-SV_dot_0 = np.zeros_like(SV_0)
-res = np.zeros_like(SV_0)
+    # ---------------------------------------------------------------------------
+    # Initialize solution vector using np.zeros based on number of the variables
+    # ---------------------------------------------------------------------------
+    # SV_node = np.concatenate((np.array((phi_SEI_dl_0, phi_elyte_0, eps_0)), C_k_sei, C_k_elyte))
+    SV_node = np.concatenate((np.array((phi_0+phi_SEI_dl_0, phi_elyte_0, eps_0)), C_k_sei*eps_0, C_k_elyte))
+    SV_0 = np.tile(SV_node, N_y)
+    SV_dot_0 = np.zeros_like(SV_0)
+    res = np.zeros_like(SV_0)
+
+elif mode == 'homogeneous':
+    print('homogeneous model currently under development.')
+
+
+
 
 t_0 = 0
 
@@ -158,9 +164,8 @@ if check_profile:
     plt.show()
 
 
-vol_k_sei = sei.molecular_weights/rho_k_SEI
+#vol_k_sei = sei.molecular_weights/rho_k_SEI
 
 params = {'phi bounds':phi_bounds, 'Rate':R, 'Ny':N_y, 'dyInv':1./dy, \
-    'd_sei':d_sei, 'TP':TP_o, 'vol_k sei':vol_k_sei, \
-    'C_dl WE_sei':C_dl_WE_SEI, 'sigma sei':sigma_el}
+    'd_sei':d_sei, 'TP':TP_o, 'C_dl WE_sei':C_dl_WE_SEI, 'sigma sei':sigma_el}
 voltage_lookup = {'time':times, 'voltage':voltage_array}
