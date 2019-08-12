@@ -52,6 +52,7 @@ def residual(t, SV, SV_dot):
 
         # Read out local SEI composition and set Cantera object:
         Ck_sei_loc = SV[SVptr['Ck sei'][j]]
+        #rho_sei_loc = abs(np.dot(Ck_sei_loc,sei.molecular_weights))
         Xk_sei_loc = Ck_sei_loc/sum(Ck_sei_loc)
         sei.X = Xk_sei_loc
 
@@ -77,6 +78,10 @@ def residual(t, SV, SV_dot):
 
         # Calculate residual for sei volume fraction:
         dSVdt_eps_sei = np.dot(dSVdt_ck_sei, params['vol_k sei'])
+        #rint(j)
+        #rint(dSVdt_ck_sei)
+        #rint(dSVdt_eps_sei)
+        #fds
         res[SVptr['eps sei'][j]] = SV_dot[SVptr['eps sei'][j]] - dSVdt_eps_sei
 
         # Calculate faradaic current density due to charge transfer at SEI-elyte

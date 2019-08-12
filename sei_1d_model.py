@@ -5,7 +5,7 @@ Created on Wed May 16 14:52:05 2018
 
 This code is the foundation (top level script) for a model of solid-electrolye-
 interface (SEI) formation in a Li-ion battery (LIB). The model is set to track
-the electric potential, cheical composition, and volume fraction of an SEI as 
+the electric potential, cheical composition, and volume fraction of an SEI as
 it grows in 1 dimension through a series of discretized finite volumes.
 
 While the model's solution vector also stores the electrolyte composition, at
@@ -23,8 +23,8 @@ from sei_1d_outputs import *
 
 print('\n     Importing inputs and intializing.')
 
-# This function imports all user inputs, creates all needed 
-#    Cantera objects, dictionaries for parameters, pointers, etc., and 
+# This function imports all user inputs, creates all needed
+#    Cantera objects, dictionaries for parameters, pointers, etc., and
 #    initializes the solution vector.
 from sei_1d_init import SV_0, SV_dot_0, SVptr, times, objs, params,  \
     save_name, ctifile
@@ -66,8 +66,6 @@ SaveFiles(save_name, ctifile, data.T, data_names)
 
 # Plot the data
 plot_data(t, SV, SVptr, objs, params)
-
-reporting(t, SV, SVptr, params)
 
 print("\n     Goodbye")
 
