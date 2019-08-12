@@ -231,7 +231,7 @@ standardState = constantIncompressible(molarVolume = ((2*6.941+15.9994)/2.200, '
 #-------------------------------------------------------------------------------
 # Edit these k_f values and edit/replace these reactions, as desired:
 
-scale= 6e8
+scale= 1e10#6e8
 k_f_1 = scale*1.2e-2
 k_f_2 = scale*6e-6
 k_f_3 = scale*2.5e-5
@@ -257,7 +257,7 @@ surface_reaction("LEDC[SEI] + H2O(el) <=> Li2CO3[SEI] + CO2 +  C2H6O2(el)",[k_f_
 
 
 # Don't touch this reaction
-surface_reaction("e(SEI) <=> electron", [1e-14, 0.0, 0.0], id="an_SEI_int-1")
+surface_reaction("e(SEI) <=> electron", [1.0e-12, 0.0, 0.0], id="an_SEI_int-1")
 
 
 
