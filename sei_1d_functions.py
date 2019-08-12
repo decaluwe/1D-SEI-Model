@@ -4,7 +4,7 @@ import numpy as np
 import cantera as ct
 
 """----------Residual function for IDA solver----------"""
-def residual(t, SV, SV_dot):
+def residual_detailed(t, SV, SV_dot):
     from sei_1d_init import objs, params, voltage_lookup, SVptr
 
     # Initialize residual equal to all zeros:
@@ -141,5 +141,22 @@ def residual(t, SV, SV_dot):
     i_dl = i_Far - i_sei[:-1] + i_sei[1:]
     dSVdt_phi_dl = -i_dl/params['C_dl WE_sei']
     res[SVptr['phi sei']] = SV_dot[SVptr['phi sei']] - dSVdt_phi_dl
+
+    return res
+
+def residual_homogeneous(t, SV, SV_dot):
+    from sei_1d_init import objs, params, voltage_lookup, SVptr
+
+    res = SV_dot - np.zeros_like(SV_dot)
+
+    # Read out cantera objects:
+    WE = objs['WE']
+    sei = objs['SEI']
+    elyte = objs['elyte']
+    sei_elyte = objs['SEI_elyte']
+    sei_conductor = objs['conductor']
+    WE_sei = objs['WE_SEI']
+
+    phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
 
     return res

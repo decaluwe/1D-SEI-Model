@@ -73,8 +73,47 @@ print('\n'.join(sei.species_names))
 
 # %% Initializing solution vector
 
-"""----------Set up solution vector pointer SVptr----------"""
 
+t_0 = 0
+
+# Set preliminary parameters for the anode voltage sweep function
+phi_bounds = np.array([phi_1, phi_2])  # Upper and lower voltage bounds
+R = sweep_rate                            # Sweep rate [V/s]
+
+# Times for discontinuities (sweep sign change) in anode voltage
+t_event0 = -sweep_dirn_0*(phi_0 - phi_bounds[int(0.5*(1. + sweep_dirn_0))])/(R)
+dt = (phi_bounds[1] - phi_bounds[0])/R
+t_events = np.arange(t_event0,t_event0+dt*(2*n_cycles+1),dt)
+times = np.concatenate((np.array([0.]),t_events),)
+
+t_hold_init = times[-1] + 1e-6
+t_hold_final = times[-1] + t_hold
+
+times = np.concatenate((times,(t_hold_init,),(t_hold_final,)))
+
+voltage_array = np.zeros_like(times)
+voltage_array[0] = phi_0
+
+direction = sweep_dirn_0
+for i, t in enumerate(t_events):
+    voltage_array[i+1] = voltage_array[i] + direction*(t - times[i])*R
+    direction *= -1
+
+voltage_array[-2:] = phi_hold
+
+t = np.linspace(0,times[-1],500)
+v = np.interp(t,times,voltage_array)
+
+if check_profile:
+    print('Check that voltage profile is correct.  Cancel simulation, if not. \n')
+    plt.figure()
+    plt.plot(t,v)
+    plt.xlabel('time (s)')
+    plt.ylabel(r"$\Phi_{WE} - \Phi_{CE}$" ' (V)')
+    plt.show()
+
+
+"""----------Set up solution vector pointer SVptr----------"""
 SVptr = {}
 
 if mode == 'detailed':
@@ -119,53 +158,25 @@ if mode == 'detailed':
     SV_dot_0 = np.zeros_like(SV_0)
     res = np.zeros_like(SV_0)
 
+    params = {'phi bounds':phi_bounds, 'Rate':R, 'Ny':N_y, 'dyInv':1./dy, \
+        'd_sei':d_sei, 'TP':TP_o, 'C_dl WE_sei':C_dl_WE_SEI, 'sigma sei':sigma_el}
+
 elif mode == 'homogeneous':
-    print('homogeneous model currently under development.')
+    SVptr['phi sei-we'] = 0
+    SVptr['phi sei-elyte'] = 1
+    SVptr['thickness'] = 2
+    SVptr['Ck sei'] = np.arange(3,3+sei.n_species)
+    nvars_node = sei.n_species + 2
+    nvars_tot = N_x*(1 + N_y*nvars_node)
 
+    SV_node = np.concatenate((np.array((phi_0+phi_SEI_dl_0, phi_0+phi_SEI_dl_0, t_0)), C_k_sei))
+    SV_0 = np.tile(SV_node, N_y)
+    SV_dot_0 = np.zeros_like(SV_0)
+    res = np.zeros_like(SV_0)
 
-
-
-t_0 = 0
-
-# Set preliminary parameters for the anode voltage sweep function
-phi_bounds = np.array([phi_1, phi_2])  # Upper and lower voltage bounds
-R = sweep_rate                            # Sweep rate [V/s]
-
-# Times for discontinuities (sweep sign change) in anode voltage
-t_event0 = -sweep_dirn_0*(phi_0 - phi_bounds[int(0.5*(1. + sweep_dirn_0))])/(R)
-dt = (phi_bounds[1] - phi_bounds[0])/R
-t_events = np.arange(t_event0,t_event0+dt*(2*n_cycles+1),dt)
-times = np.concatenate((np.array([0.]),t_events),)
-
-t_hold_init = times[-1] + 1e-6
-t_hold_final = times[-1] + t_hold
-
-times = np.concatenate((times,(t_hold_init,),(t_hold_final,)))
-
-voltage_array = np.zeros_like(times)
-voltage_array[0] = phi_0
-
-direction = sweep_dirn_0
-for i, t in enumerate(t_events):
-    voltage_array[i+1] = voltage_array[i] + direction*(t - times[i])*R
-    direction *= -1
-
-voltage_array[-2:] = phi_hold
-
-t = np.linspace(0,times[-1],500)
-v = np.interp(t,times,voltage_array)
-
-if check_profile:
-    print('Check that voltage profile is correct.  Cancel simulation, if not. \n')
-    plt.figure()
-    plt.plot(t,v)
-    plt.xlabel('time (s)')
-    plt.ylabel(r"$\Phi_{WE} - \Phi_{CE}$" ' (V)')
-    plt.show()
-
+    params = {'phi bounds':phi_bounds, 'Rate':R, 'Ny':N_y,  'TP':TP_o, \
+        'C_dl WE_sei':C_dl_WE_SEI, 'sigma sei':sigma_el}
 
 #vol_k_sei = sei.molecular_weights/rho_k_SEI
 
-params = {'phi bounds':phi_bounds, 'Rate':R, 'Ny':N_y, 'dyInv':1./dy, \
-    'd_sei':d_sei, 'TP':TP_o, 'C_dl WE_sei':C_dl_WE_SEI, 'sigma sei':sigma_el}
 voltage_lookup = {'time':times, 'voltage':voltage_array}

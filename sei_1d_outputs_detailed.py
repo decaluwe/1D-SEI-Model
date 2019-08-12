@@ -116,7 +116,7 @@ def prepare_data(SV, t, objs, params):
 
 """ Save File Copies """
 "-----------------------------------------------------------------------------"
-def SaveFiles(save_name, ctifile, data, names):
+def save_files(save_name, ctifile, data, names):
     import os, sys
     import numpy as np
     import cantera as ct

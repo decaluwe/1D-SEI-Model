@@ -12,12 +12,10 @@ the species in a discretized grid employing a finite volume method.
 
 #  Import all necessary modules
 import numpy as np
-from sei_1d_functions import residual
 import cantera as ct
 from assimulo.solvers import IDA
 from assimulo.problem import Implicit_Problem
 import os
-from sei_1d_outputs import *
 
 print('\n     Importing inputs and intializing.')
 
@@ -25,7 +23,16 @@ print('\n     Importing inputs and intializing.')
 #    Cantera objects, dictionaries for parameters, pointers, etc., and
 #    initializes the solution vector.
 from sei_1d_init import SV_0, SV_dot_0, SVptr, times, objs, params,  \
-    save_name, ctifile
+    save_name, ctifile, mode
+
+if mode == 'detailed':
+    from sei_1d_functions import residual_detailed as residual
+    from sei_1d_outputs_detailed import *
+elif mode == 'homogeneous':
+    from sei_1d_functions import residual_homogeneous as residual
+    from sei_1d_outputs_homogeneous import *
+else:
+    raise Exception('Please select a valid simulation mode.  Available options are "detailed" and "homogeneous"')
 
 print('\n     Running simulation\n')
 # Set up problem instance
@@ -59,7 +66,7 @@ t, SV, SV_dot = simulation.simulate(t_f)
 data, data_names = prepare_data(SV, t, objs, params)
 
 # Save the data:
-SaveFiles(save_name, ctifile, data.T, data_names)
+save_files(save_name, ctifile, data.T, data_names)
 
 # Plot the data
 plot_data(t, SV, SVptr, objs, params)
