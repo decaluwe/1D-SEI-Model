@@ -116,7 +116,7 @@ def prepare_data(SV, t, objs, params):
 
 """ Save File Copies """
 "-----------------------------------------------------------------------------"
-def SaveFiles(save_name, ctifile, data, names):
+def save_files(save_name, ctifile, data, names):
     import os, sys
     import numpy as np
     import cantera as ct
@@ -268,14 +268,14 @@ def plot_data(t, SV, SVptr, objs, params):
 
     phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
 
-    #fig, ax1 = plt.subplots(1, 1, figsize=(10, 9))
-    #ax1.plot(t,SV[:,SVptr['Ck sei'][0,:].astype(int)])
-    #ax1.legend(names)
-    #ax1.set_ylabel('Molar concentration (kmol/m3) in first SEI layer.')
-    #ax1.set_xlabel('time (s)')
+    fig, ax1 = plt.subplots(1, 1, figsize=(8., 7.2))
+    ax1.plot(t,SV[:,SVptr['Ck sei'][0,:].astype(int)])
+    ax1.legend(names)
+    ax1.set_ylabel('Molar concentration (kmol/m3) in first SEI layer.')
+    ax1.set_xlabel('time (s)')
     """plt.savefig('Figure1.pdf',format='pdf',dpi=350)"""
 
-    fig2, ax2 = plt.subplots(1, 1, figsize=(10, 9))
+    fig2, ax2 = plt.subplots(1, 1, figsize=(8., 7.2))
     depths = list()
     for i in range(params['Ny']):
         ax2.plot(t,SV[:,SVptr['eps sei'][i]])
@@ -286,11 +286,11 @@ def plot_data(t, SV, SVptr, objs, params):
     ax2.legend(depths)
 
 
-    if 0:
+    if 1:
         v_names= list()
         v_names.append('W anode')
         v_names.append(depths)
-        fig3, ax3 = plt.subplots(1, 1, figsize=(10, 9))
+        fig3, ax3 = plt.subplots(1, 1, figsize=(8., 7.2))
         ax3.plot(t,phi_WE)
         for i in range(params['Ny']):
             ax3.plot(t,SV[:,SVptr['phi sei'][i]])
@@ -304,8 +304,8 @@ def plot_data(t, SV, SVptr, objs, params):
     eps_k_sei = np.zeros_like(profiles)
     for i, p in enumerate(profiles):
         eps_sei = SV[-1,SVptr['eps sei'][i]]
-        vol_k = p*params['vol_k sei']
-        v_tot = np.dot(p,params['vol_k sei'])
+        vol_k = p*sei.partial_molar_volumes
+        v_tot = np.dot(p,sei.partial_molar_volumes)
         eps_k_sei[i,:] = eps_sei*vol_k/v_tot
 
 

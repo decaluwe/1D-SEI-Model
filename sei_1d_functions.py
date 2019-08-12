@@ -3,11 +3,8 @@
 import numpy as np
 import cantera as ct
 
-"""----------Residual functions for IDA solver----------"""
-
-
-"""------------Spatially Heterogeneous Model-----------"""
-def residual(t, SV, SV_dot):
+"""----------Residual function for IDA solver----------"""
+def residual_detailed(t, SV, SV_dot):
     from sei_1d_init import objs, params, voltage_lookup, SVptr
 
     # Initialize residual equal to all zeros:
@@ -22,13 +19,13 @@ def residual(t, SV, SV_dot):
     WE_sei = objs['WE_SEI']
 
     phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
-    
+
     i_sei = np.zeros(params['Ny']+1,)
     i_Far = np.zeros(params['Ny'],)
 
     # Set anode and anode/electrolyte interface potentials
     WE.electric_potential = phi_WE
-    
+
     # Start in the volume adjacent to the working electrode:
     j=0
 
@@ -37,6 +34,10 @@ def residual(t, SV, SV_dot):
     sei.electric_potential = phi_sei_loc
     sei_conductor.electric_potential = phi_sei_loc
 
+    # Electrolyte electric potential assumed to be zero:
+    elyte.electric_potential = 0.
+
+
     # SEI volume fraction:
     eps_sei_loc = SV[SVptr['eps sei'][j]]
 
@@ -44,8 +45,11 @@ def residual(t, SV, SV_dot):
     #   charge-transfer reactions at the WE-SEI interface:
     i_sei[j] = eps_sei_loc*WE_sei.get_net_production_rates(WE)*ct.faraday
 
-    # Surface area equals the geometric area, for this interface:
-    rxn_scale = 1
+    # sei-electrolyte area per unit volume.  This is scaled by
+    #   (1 - eps_sei)*eps_sei so that available area goes to zero
+    #   as the sei volume fraction approaches either zero or one:
+    sei_APV = (1. - eps_sei_loc) * \
+        (params['dyInv'] + 4.*eps_sei_loc/params['d_sei'])
 
     # Loop through the remaining volumes (except for the very last one):
     for j in range(params['Ny']-1):
@@ -64,20 +68,15 @@ def residual(t, SV, SV_dot):
         # Electrolyte electric potential assumed to be zero:
         elyte.electric_potential = 0.
 
-        # sei-electrolyte area per unit volume.  This is scaled by 
-        #   (1 - eps_sei)*eps_sei so that available area goes to zero
-        #   as the sei volume fraction approaches either zero or one:
-        sei_APV = 4.*eps_sei_loc*(1.0-eps_sei_loc)/params['d_sei']
-
         # Production rates from chemical reactions at sei-electrolyte interface:
         Rates_sei_elyte = sei_elyte.get_net_production_rates(sei)*sei_APV
 
         # Calculate residual for chemical molar concentrations:
-        dSVdt_ck_sei = rxn_scale*Rates_sei_elyte
+        dSVdt_ck_sei = Rates_sei_elyte
         res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
 
         # Calculate residual for sei volume fraction:
-        dSVdt_eps_sei = np.dot(dSVdt_ck_sei, params['vol_k sei'])
+        dSVdt_eps_sei = np.dot(dSVdt_ck_sei, sei.partial_molar_volumes)
         #rint(j)
         #rint(dSVdt_ck_sei)
         #rint(dSVdt_eps_sei)
@@ -95,14 +94,21 @@ def residual(t, SV, SV_dot):
         # Sei volume fraction at interface between volumes:
         eps_sei_next = SV[SVptr['eps sei'][j+1]]
         eps_sei_int = 0.5*(eps_sei_loc + eps_sei_next)
-    
+
         # Current = (Conductivity)*(volume fraction)*(-grad(Phi))
         dPhi = phi_sei_loc - phi_sei_next
-        sigma_sei = np.dot(params['sigma sei'],sei.X)
+        vol_k = sei.X * sei.partial_molar_volumes
+        vol_tot = np.dot(sei.X, sei.partial_molar_volumes)
+        vol_fracs = vol_k / vol_tot
+        sigma_sei = np.dot(params['sigma sei'],vol_fracs)
         i_sei[j+1] = eps_sei_int*sigma_sei*dPhi
 
-        # Rates for next node are scaled by sei volume fraction in this node:
-        rxn_scale = 0.5*(eps_sei_loc+eps_sei_next)
+        # sei-electrolyte area per unit volume.  This is scaled by
+        #   (1 - eps_sei)*eps_sei so that available area goes to zero
+        #   as the sei volume fraction approaches either zero or one:
+        sei_APV = (1. - eps_sei_next) * \
+            (eps_sei_loc*params['dyInv'] + 4.*eps_sei_loc/params['d_sei'])
+
         eps_sei_loc = eps_sei_next
 
     # Repeat calculations for final node, where the boundary condition is
@@ -121,7 +127,7 @@ def residual(t, SV, SV_dot):
     # SEI surface Area Per unit Volume (APV)
     sei_APV = 4.*eps_sei_loc*(1-eps_sei_loc)**2/params['d_sei']
     Rates_sei_elyte = sei_elyte.get_net_production_rates(sei)*sei_APV
-    dSVdt_ck_sei = rxn_scale*Rates_sei_elyte
+    dSVdt_ck_sei = Rates_sei_elyte
     res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
 
     # Calculate faradaic current density due to charge transfer at SEI-elyte
@@ -129,7 +135,7 @@ def residual(t, SV, SV_dot):
     Rates_sei_conductor = sei_elyte.get_net_production_rates(sei_conductor)
     i_Far[j] = Rates_sei_conductor*sei_APV/params['dyInv']
 
-    dSVdt_eps_sei = np.dot(dSVdt_ck_sei, params['vol_k sei'])
+    dSVdt_eps_sei = np.dot(dSVdt_ck_sei, sei.partial_molar_volumes)
     res[SVptr['eps sei'][j]] = SV_dot[SVptr['eps sei'][j]] - dSVdt_eps_sei
 
     i_dl = i_Far - i_sei[:-1] + i_sei[1:]
@@ -138,15 +144,10 @@ def residual(t, SV, SV_dot):
 
     return res
 
-
-    
-
-"""------------Spatially Homogeneous Model-----------"""
 def residual_homogeneous(t, SV, SV_dot):
     from sei_1d_init import objs, params, voltage_lookup, SVptr
 
-    # Initialize residual equal to all zeros:
-    res = SV_dot
+    res = SV_dot - np.zeros_like(SV_dot)
 
     # Read out cantera objects:
     WE = objs['WE']
@@ -157,61 +158,76 @@ def residual_homogeneous(t, SV, SV_dot):
     WE_sei = objs['WE_SEI']
 
     phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
-    
+
     # Set anode and anode/electrolyte interface potentials
     WE.electric_potential = phi_WE
 
-    # SEI electric potential:
-    phi_sei_WE = phi_WE + SV[SVptr['WE_dl']]
+    # SEI electric potential at anode interface:
+    phi_sei_WE = phi_WE + SV[SVptr['phi sei-we']]
+
+    # SEI Chemical composition:
+    X_sei = SV[SVptr['Ck sei']] / sum(SV[SVptr['Ck sei']])
+
+    # SEI electric potential at electrolyte interface:
+    phi_sei_elyte = SV[SVptr['phi sei-elyte']]
+
+    # SEI thickness:
+    t_SEI = SV[SVptr['thickness']]
+
     sei.electric_potential = phi_sei_WE
     sei_conductor.electric_potential = phi_sei_WE
+    sei.X = X_sei
 
-    # The current in the SEI entering this voluem is that produced by
-    #   charge-transfer reactions at the WE-SEI interface:
-    i_WE = WE_sei.get_net_production_rates(WE)*ct.faraday
+    # The current into the sei at the WE interface equals the rate of production
+    #   of electrons in the WE:
+    i_far_WE = WE_sei.get_net_production_rates(WE)*ct.faraday
+    print(phi_sei_WE)
+    print(i_far_WE)
 
+    # Calculate the current through the sei, which is Ohmic in nature:
+    vol_k = sei.X * sei.partial_molar_volumes
+    vol_tot = np.dot(sei.X, sei.partial_molar_volumes)
+    vol_fracs = vol_k / vol_tot
+    sigma_sei = np.dot(params['sigma sei'],vol_fracs)
 
-    phi_sei_elyte = SV[SVptr['Elyte_dl']]
+    print(sigma_sei)
+    i_sei = sigma_sei*(phi_sei_WE - phi_sei_elyte)/t_SEI
+
     sei.electric_potential = phi_sei_elyte
     sei_conductor.electric_potential = phi_sei_elyte
-    
-    Xk_sei = SV[SVptr['Xk_sei']]
-    sei.X = Xk_sei
-
-    
-
-    i_elyte = sei_elyte.get_net_production_rates(sei_conductor)*ct.faraday
-    sdot_sei = sei_elyte.get_net_production_rates(sei)
-
-    # Repeat calculations for final node, where the boundary condition is
-    #   that i_sei = 0 at the interface with the electrolyte:
-    j = int(params['Ny']-1)
-    Ck_sei_loc = SV[SVptr['Ck sei'][j]]
-    Xk_sei_loc = Ck_sei_loc/sum(Ck_sei_loc)
-    sei.X = Xk_sei_loc
-
     elyte.electric_potential = 0.
 
-    phi_sei_loc =  SV[SVptr['phi sei'][j]]
-    sei.electric_potential = phi_sei_loc
-    sei_conductor.electric_potential = phi_sei_loc
+    # The current into the electolyte at the sei interface equals the rate of
+    #   production of electrons in the sei conductor phase:
+    i_far_elyte = sei_elyte.get_net_production_rates(sei_conductor)*ct.faraday
 
-    # SEI surface Area Per unit Volume (APV)
-    sei_APV = 4.*eps_sei_loc*(1-eps_sei_loc)**2/params['d_sei']
-    Rates_sei_elyte = sei_elyte.get_net_production_rates(sei)*sei_APV
-    dSVdt_ck_sei = rxn_scale*Rates_sei_elyte
-    res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
+    # Molar production rate for sei species due to reactions at the sei-elyte
+    #   interface:
+    sdot_sei_elyte = sei_elyte.get_net_production_rates(sei)
 
-    # Calculate faradaic current density due to charge transfer at SEI-elyte
-    #   interface, in A/m2 total.
-    Rates_sei_conductor = sei_elyte.get_net_production_rates(sei_conductor)
-    i_Far[j] = Rates_sei_conductor*sei_APV/params['dyInv']
+    # Double layer current at the sei-WE interface:
+    i_dl_WE = i_sei - i_far_WE
 
-    dSVdt_eps_sei = np.dot(dSVdt_ck_sei, params['vol_k sei'])
-    res[SVptr['eps sei'][j]] = SV_dot[SVptr['eps sei'][j]] - dSVdt_eps_sei
+    # Double layer current at the sei-WE interface:
+    i_dl_elyte = i_sei - i_far_elyte
 
-    i_dl = i_Far - i_sei[:-1] + i_sei[1:]
-    dSVdt_phi_dl = -i_dl/params['C_dl WE_sei']
-    res[SVptr['phi sei']] = SV_dot[SVptr['phi sei']] - dSVdt_phi_dl
+
+    dSVdt_phi_sei_we = -i_dl_WE/params['C_dl WE_sei']
+    res[SVptr['phi sei-we']] = SV_dot[SVptr['phi sei-we']] - dSVdt_phi_sei_we
+
+    dSVdt_phi_sei_elyte = i_dl_elyte/params['C_dl WE_sei']
+    res[SVptr['phi sei-elyte']] = SV_dot[SVptr['phi sei-elyte']] - dSVdt_phi_sei_elyte
+
+    dSVdt_ck_sei = sdot_sei_elyte/t_SEI
+    res[SVptr['Ck sei']] = SV_dot[SVptr['Ck sei']] - dSVdt_ck_sei
+
+    dSVdt_t_sei = np.dot(sdot_sei_elyte,sei.partial_molar_volumes)
+    res[SVptr['thickness']] = SV_dot[SVptr['thickness']] - dSVdt_t_sei
+
+    print(phi_sei_elyte)
+
+
+
+
 
     return res
