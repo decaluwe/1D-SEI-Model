@@ -267,22 +267,48 @@ def plot_data(t, SV, SVptr, objs, params):
     phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
 
 
-    C_k = SV[-1,SVptr['Ck sei']]
-    eps_k_sei = np.zeros_like(C_k)
-    vol_k = C_k*sei.partial_molar_volumes
-    v_tot = np.dot(C_k,sei.partial_molar_volumes)
-    eps_k_sei = vol_k/v_tot
+    fig1, ax1 = plt.subplots(1, 1, figsize=(8, 7.2))
+    ax1.plot(t,1e9*SV[:,SVptr['thickness']])
+    ax1.set_ylabel('SEI Thickness (nm)')
+    ax1.set_xlabel('Time (s)')
 
+    C_k = SV[:,SVptr['Ck sei']]
+    eps_k_sei = np.zeros_like(C_k)
+    for i, c in enumerate(C_k):
+        vol_k = c*sei.partial_molar_volumes
+        v_tot = np.dot(c,sei.partial_molar_volumes)
+        eps_k_sei[i,:] = vol_k/v_tot
 
     names = list()
     for i in range(sei.n_species):
         names.append(sei.species_names[i])
+
+    fig2, ax2 = plt.subplots(1, 1, figsize=(8, 7.2))
+
+    ax2.plot(t,eps_k_sei)
+    ax2.set_ylabel('Species Volume Fractions')
+    ax2.set_xlabel('Time (s)')
+    ax2.legend(names)
+
+    names = list()
+    names.append('WE potential')
+    names.append('SEI potential at WE')
+    names.append('SEI potential at elyte')
+    fig3, ax3 = plt.subplots(1, 1, figsize=(8, 7.2))
+
+    ax3.plot(t,phi_WE)
+    ax3.plot(t,phi_WE+SV[:,SVptr['phi sei-we']],'o')
+    ax3.plot(t,SV[:,SVptr['phi sei-elyte']])
+    ax3.set_ylabel('Electric potentials (V)')
+    ax3.set_xlabel('Time (s)')
+    ax3.legend(names)
+
 
     """fig5, ax5 = plt.subplots(1, 1, figsize=(8, 7.2))
     ax5.plot(1e9*np.arange(params['Ny'])/params['dyInv'],eps_k_sei)
     ax5.plot(1e9*np.arange(params['Ny'])/params['dyInv'],1.-SV[-1,SVptr['eps sei']])
     ax5.legend(names)
     ax5.set_ylabel('Species volume fraction')
-    ax5.set_xlabel('SEI Depth (from anode, nm)')
-    plt.show()"""
+    ax5.set_xlabel('SEI Depth (from anode, nm)')"""
+    plt.show()
     """plt.savefig('Figure2.pdf',format='pdf',dpi=350)"""

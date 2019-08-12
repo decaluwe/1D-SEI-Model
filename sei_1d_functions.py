@@ -159,4 +159,75 @@ def residual_homogeneous(t, SV, SV_dot):
 
     phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
 
+    # Set anode and anode/electrolyte interface potentials
+    WE.electric_potential = phi_WE
+
+    # SEI electric potential at anode interface:
+    phi_sei_WE = phi_WE + SV[SVptr['phi sei-we']]
+
+    # SEI Chemical composition:
+    X_sei = SV[SVptr['Ck sei']] / sum(SV[SVptr['Ck sei']])
+
+    # SEI electric potential at electrolyte interface:
+    phi_sei_elyte = SV[SVptr['phi sei-elyte']]
+
+    # SEI thickness:
+    t_SEI = SV[SVptr['thickness']]
+
+    sei.electric_potential = phi_sei_WE
+    sei_conductor.electric_potential = phi_sei_WE
+    sei.X = X_sei
+
+    # The current into the sei at the WE interface equals the rate of production
+    #   of electrons in the WE:
+    i_far_WE = WE_sei.get_net_production_rates(WE)*ct.faraday
+    print(phi_sei_WE)
+    print(i_far_WE)
+
+    # Calculate the current through the sei, which is Ohmic in nature:
+    vol_k = sei.X * sei.partial_molar_volumes
+    vol_tot = np.dot(sei.X, sei.partial_molar_volumes)
+    vol_fracs = vol_k / vol_tot
+    sigma_sei = np.dot(params['sigma sei'],vol_fracs)
+
+    print(sigma_sei)
+    i_sei = sigma_sei*(phi_sei_WE - phi_sei_elyte)/t_SEI
+
+    sei.electric_potential = phi_sei_elyte
+    sei_conductor.electric_potential = phi_sei_elyte
+    elyte.electric_potential = 0.
+
+    # The current into the electolyte at the sei interface equals the rate of
+    #   production of electrons in the sei conductor phase:
+    i_far_elyte = sei_elyte.get_net_production_rates(sei_conductor)*ct.faraday
+
+    # Molar production rate for sei species due to reactions at the sei-elyte
+    #   interface:
+    sdot_sei_elyte = sei_elyte.get_net_production_rates(sei)
+
+    # Double layer current at the sei-WE interface:
+    i_dl_WE = i_sei - i_far_WE
+
+    # Double layer current at the sei-WE interface:
+    i_dl_elyte = i_sei - i_far_elyte
+
+
+    dSVdt_phi_sei_we = -i_dl_WE/params['C_dl WE_sei']
+    res[SVptr['phi sei-we']] = SV_dot[SVptr['phi sei-we']] - dSVdt_phi_sei_we
+
+    dSVdt_phi_sei_elyte = i_dl_elyte/params['C_dl WE_sei']
+    res[SVptr['phi sei-elyte']] = SV_dot[SVptr['phi sei-elyte']] - dSVdt_phi_sei_elyte
+
+    dSVdt_ck_sei = sdot_sei_elyte/t_SEI
+    res[SVptr['Ck sei']] = SV_dot[SVptr['Ck sei']] - dSVdt_ck_sei
+
+    dSVdt_t_sei = np.dot(sdot_sei_elyte,sei.partial_molar_volumes)
+    res[SVptr['thickness']] = SV_dot[SVptr['thickness']] - dSVdt_t_sei
+
+    print(phi_sei_elyte)
+
+
+
+
+
     return res

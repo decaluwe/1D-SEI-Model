@@ -73,9 +73,6 @@ print('\n'.join(sei.species_names))
 
 # %% Initializing solution vector
 
-
-t_0 = 0
-
 # Set preliminary parameters for the anode voltage sweep function
 phi_bounds = np.array([phi_1, phi_2])  # Upper and lower voltage bounds
 R = sweep_rate                            # Sweep rate [V/s]
@@ -169,7 +166,7 @@ elif mode == 'homogeneous':
     nvars_node = sei.n_species + 2
     nvars_tot = N_x*(1 + N_y*nvars_node)
 
-    SV_node = np.concatenate((np.array((phi_0+phi_SEI_dl_0, phi_0+phi_SEI_dl_0, t_0)), C_k_sei))
+    SV_node = np.concatenate((np.array((phi_SEI_dl_0, phi_0+phi_SEI_dl_0, t_0)), C_k_sei))
     SV_0 = np.tile(SV_node, N_y)
     SV_dot_0 = np.zeros_like(SV_0)
     res = np.zeros_like(SV_0)
