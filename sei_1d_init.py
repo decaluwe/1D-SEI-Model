@@ -163,16 +163,23 @@ elif mode == 'homogeneous':
     SVptr['phi sei-elyte'] = 1
     SVptr['thickness'] = 2
     SVptr['Ck sei'] = np.arange(3,3+sei.n_species)
-    nvars_node = sei.n_species + 2
-    nvars_tot = N_x*(1 + N_y*nvars_node)
 
-    SV_node = np.concatenate((np.array((phi_SEI_dl_0, phi_0+phi_SEI_dl_0, t_0)), C_k_sei))
-    SV_0 = np.tile(SV_node, N_y)
+    SV_0 = np.concatenate((np.array((phi_SEI_dl_0, phi_0+phi_SEI_dl_0, t_0)), C_k_sei))
     SV_dot_0 = np.zeros_like(SV_0)
     res = np.zeros_like(SV_0)
 
-    params = {'phi bounds':phi_bounds, 'Rate':R, 'Ny':N_y,  'TP':TP_o, \
+    params = {'phi bounds':phi_bounds, 'Rate':R, 'TP':TP_o, \
         'C_dl WE_sei':C_dl_WE_SEI, 'sigma sei':sigma_el}
+
+elif mode == 'reduced':
+    SVptr['thickness'] = 0
+    SVptr['Ck sei'] = np.arange(1,1+sei.n_species)
+
+    SV_0 = np.concatenate((np.array((t_0,)), C_k_sei))
+    SV_dot_0 = np.zeros_like(SV_0)
+    res = np.zeros_like(SV_0)
+
+    params = {'phi bounds':phi_bounds, 'Rate':R, 'TP':TP_o}
 
 #vol_k_sei = sei.molecular_weights/rho_k_SEI
 

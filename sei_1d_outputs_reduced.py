@@ -160,20 +160,22 @@ def save_files(save_name, ctifile, data, names):
 
 
 # The function below will apply column labels to the data frame sol_vec
-def output_names(sol_vec,len_sol_vec,track_vars,track_temp,num_species):
+def output_names(sol_vec,N_x,N_y,len_sol_vec,track_vars,track_temp,num_species):
     # Initialize base strings
 
-    temp_tag        = ["T"]
-    V_elyte_tag     = ["V_elyte"]
-    V_sei_an_tag    = ["V_sei_an"]
-    V_sei_elyte_tag = ["V_sei_elyte"]
-    phi_tag         = ["phi"]
+
+
+    temp_tag        = ["T_" for i in range(N_x*N_y)]
+    V_elyte_tag     = ["V_elyte_" for i in range(N_x*N_y)]
+    V_sei_an_tag    = ["V_sei_an_" for i in range(N_x*N_y)]
+    V_sei_elyte_tag = ["V_sei_elyte_" for i in range(N_x*N_y)]
+    phi_tag         = ["phi_" for i in range(N_x*N_y)]
     c_elyte_tag = {}
     c_SEI_tag = {}
     for i in range(num_species[0]):
-        c_elyte_tag[str(i+1)] = ["c_elyte"+str(i+1)]
+        c_elyte_tag[str(i+1)] = ["c_elyte"+str(i+1)+"_" for j in range(N_x*N_y)]
     for i in range(num_species[1]):
-        c_SEI_tag[str(i+1)] = ["c_SEI"+str(i+1)]
+        c_SEI_tag[str(i+1)] = ["c_SEI"+str(i+1)+"_" for j in range(N_x*N_y)]
 
     # concatenate appropriate indices onto base strings
 
@@ -261,7 +263,6 @@ def plot_data(t, SV, SVptr, objs, params):
 
     phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
 
-
     fig1, ax1 = plt.subplots(1, 1, figsize=(8, 7.2))
     ax1.plot(t,1e9*SV[:,SVptr['thickness']])
     ax1.set_ylabel('SEI Thickness (nm)')
@@ -285,18 +286,6 @@ def plot_data(t, SV, SVptr, objs, params):
     ax2.set_xlabel('Time (s)')
     ax2.legend(names)
 
-    names = list()
-    names.append('WE potential')
-    names.append('SEI potential at WE')
-    names.append('SEI potential at elyte')
-    fig3, ax3 = plt.subplots(1, 1, figsize=(8, 7.2))
-
-    ax3.plot(t,phi_WE)
-    ax3.plot(t,phi_WE+SV[:,SVptr['phi sei-we']],'o')
-    ax3.plot(t,SV[:,SVptr['phi sei-elyte']])
-    ax3.set_ylabel('Electric potentials (V)')
-    ax3.set_xlabel('Time (s)')
-    ax3.legend(names)
 
 
     """fig5, ax5 = plt.subplots(1, 1, figsize=(8, 7.2))

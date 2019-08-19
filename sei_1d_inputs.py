@@ -5,8 +5,8 @@ User inputs for 1-D SEI model.
 "-------------------------------------------------------------------------"
 import numpy as np
 
-# Choose 'detailed' or 'homogeneous':
-mode = 'homogeneous'
+# Choose 'detailed', 'homogeneous', or 'reduced':
+mode = 'reduced'
 
 "Identify cti file:"
 #ctifile = 'W_anode_chem_07242019.cti'
@@ -24,7 +24,7 @@ CE_phase = 'Lithium'
 CE_surfphase = 'Li_surf'
 
 "Optional: give a name to the output folder"
-save_name = 'homogeneous_debugging'
+save_name = 'reduced_model_fitting'
 
 """----------Define grid dimensions----------"""
 
@@ -57,18 +57,17 @@ if mode == 'detailed':
     d_sei = 2e-9    # USER INPUT d_SEI representative diameter of SEI grain [m]
 
     eps_0 = np.array([0.])      # initial volume fraction of SEI
-elif mode == 'homogeneous':
-    N_x = 1
-    N_y = 1
+elif mode == 'homogeneous' or mode == 'reduced':
 
     t_0 = 1e-11     # Initial thickness [m]
+
 
 
 """----------Define CV parameters:----------"""
 sweep_rate = 0.01  #...Voltage sweep rate [V/s]
 sweep_dirn_0 = -1
 phi_0 = 1.0
-phi_1 = 0.05# 0.5
+phi_1 = 0.5
 phi_2 = 1.5
 n_cycles = 0.
 

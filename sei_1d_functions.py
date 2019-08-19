@@ -181,8 +181,6 @@ def residual_homogeneous(t, SV, SV_dot):
     # The current into the sei at the WE interface equals the rate of production
     #   of electrons in the WE:
     i_far_WE = WE_sei.get_net_production_rates(WE)*ct.faraday
-    print(phi_sei_WE)
-    print(i_far_WE)
 
     # Calculate the current through the sei, which is Ohmic in nature:
     vol_k = sei.X * sei.partial_molar_volumes
@@ -190,7 +188,6 @@ def residual_homogeneous(t, SV, SV_dot):
     vol_fracs = vol_k / vol_tot
     sigma_sei = np.dot(params['sigma sei'],vol_fracs)
 
-    print(sigma_sei)
     i_sei = sigma_sei*(phi_sei_WE - phi_sei_elyte)/t_SEI
 
     sei.electric_potential = phi_sei_elyte
@@ -224,10 +221,46 @@ def residual_homogeneous(t, SV, SV_dot):
     dSVdt_t_sei = np.dot(sdot_sei_elyte,sei.partial_molar_volumes)
     res[SVptr['thickness']] = SV_dot[SVptr['thickness']] - dSVdt_t_sei
 
-    print(phi_sei_elyte)
+    return res
 
 
+def residual_reduced(t, SV, SV_dot):
+    from sei_1d_init import objs, params, voltage_lookup, SVptr
 
+    res = SV_dot - np.zeros_like(SV_dot)
 
+    # Read out cantera objects:
+    sei = objs['SEI']
+    elyte = objs['elyte']
+    sei_elyte = objs['SEI_elyte']
+    sei_conductor = objs['conductor']
+
+    phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
+
+    # SEI Chemical composition:
+    X_sei = SV[SVptr['Ck sei']] / sum(SV[SVptr['Ck sei']])
+
+    # SEI thickness:
+    t_SEI = SV[SVptr['thickness']]
+
+    sei.electric_potential = phi_WE
+    sei_conductor.electric_potential = phi_WE
+    sei.X = X_sei
+
+    # The model assumes that the electrolyte electric potential = 0 V:
+    elyte.electric_potential = 0.
+
+    # Molar production rate for sei species due to reactions at the sei-elyte
+    #   interface.  These are scaled by the inverse sei thickness:
+    sdot_sei_elyte = sei_elyte.get_net_production_rates(sei)/t_SEI
+
+    # Time derivative of the change in the molar concentration (kmol/m3) of
+    #   electrolyte species:
+    dSVdt_ck_sei = sdot_sei_elyte/t_SEI
+    res[SVptr['Ck sei']] = SV_dot[SVptr['Ck sei']] - dSVdt_ck_sei
+
+    # Time derivative of the SEI thickness:
+    dSVdt_t_sei = np.dot(sdot_sei_elyte,sei.partial_molar_volumes)
+    res[SVptr['thickness']] = SV_dot[SVptr['thickness']] - dSVdt_t_sei
 
     return res

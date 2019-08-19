@@ -34,8 +34,12 @@ if mode == 'detailed':
 elif mode == 'homogeneous':
     from sei_1d_functions import residual_homogeneous as residual
     from sei_1d_outputs_homogeneous import *
+elif mode == 'reduced':
+    from sei_1d_functions import residual_reduced as residual
+    from sei_1d_outputs_reduced import *
 else:
-    raise Exception('Please select a valid simulation mode.  Available options are "detailed" and "homogeneous"')
+    raise Exception('Please select a valid simulation mode." + \
+        "  Available options are "detailed", "homogeneous", and "reduced"')
 
 print('\n     Running simulation\n')
 # Set up problem instance
