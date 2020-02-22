@@ -100,13 +100,10 @@ def prepare_data(SV, t, objs, params):
     #SVnames.append('time')
     SVnames.append('phi SEI')
     SVnames.append('phi elyte')
-    SVnames.append('eps SEI')
+    SVnames.append('SEI thickness')
 
     for i in range(1,sei.n_species):
         SVnames.append(sei.species_names[i])
-
-    for i in range(1,elyte.n_species):
-        SVnames.append(elyte.species_names[i])
 
     return data, SVnames
 

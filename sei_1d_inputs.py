@@ -6,11 +6,11 @@ User inputs for 1-D SEI model.
 import numpy as np
 
 # Choose 'detailed', 'homogeneous', or 'reduced':
-mode = 'reduced'
+mode = 'detailed'
 
 "Identify cti file:"
 #ctifile = 'W_anode_chem_07242019.cti'
-ctifile = 'W_anode_chem_Carelli.cti'
+ctifile = 'W_anode_chem_Carelli_detailed.cti'
 
 # Phase names in cti file
 elyte_phase = 'electrolyte'
@@ -24,7 +24,7 @@ CE_phase = 'Lithium'
 CE_surfphase = 'Li_surf'
 
 "Optional: give a name to the output folder"
-save_name = 'reduced_model_fitting'
+save_name = 'TMS_2020'
 
 """----------Define grid dimensions----------"""
 
@@ -67,11 +67,11 @@ elif mode == 'homogeneous' or mode == 'reduced':
 sweep_rate = 0.01  #...Voltage sweep rate [V/s]
 sweep_dirn_0 = -1
 phi_0 = 1.0
-phi_1 = 0.5
+phi_1 = 0.05
 phi_2 = 1.5
-n_cycles = 0.
+n_cycles = 10.
 
-t_hold = 3600.
+t_hold = 0.
 phi_hold = 0.5
 
 # If you want to verify that the electric potential input looks correct before
@@ -88,7 +88,7 @@ phi_elyte_0 = 0.
 #   file.
 rho_k_SEI = [2110, 2013, 1321]
 # Electrical Conductivity [S/m]
-sigma_el = [1.5e-8, 4e-8, 9e-8]
+sigma_el = [2*1.5e-8, 8e-8, 13e-8] #[1.5e-8, 4e-8, 9e-8]
 
 # Double layer capacitances
 C_dl_WE_SEI = 2e-6  # F/m2
