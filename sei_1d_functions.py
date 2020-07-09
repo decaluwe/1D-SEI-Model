@@ -54,6 +54,14 @@ def residual_detailed(t, SV, SV_dot):
     # Loop through the remaining volumes (except for the very last one):
     for j in range(params['Ny']-1):
 
+        # Import diffusion coefficient calculator:
+     #   if params['transport'] == 'cst':
+     #       from functions.diffusion_coeffs import cst as diff_coeffs
+     #   elif params['transport'] == 'dst':
+     #       from functions.diffusion_coeffs import dst as diff_coeffs
+     #   else:
+     #       raise Exception('Please specify a valid transport model: cst or dst')
+
         # Read out local SEI composition and set Cantera object:
         Ck_sei_loc = SV[SVptr['Ck sei'][j]]
         #rho_sei_loc = abs(np.dot(Ck_sei_loc,sei.molecular_weights))
@@ -70,10 +78,16 @@ def residual_detailed(t, SV, SV_dot):
 
         # Production rates from chemical reactions at sei-electrolyte interface:
         Rates_sei_elyte = sei_elyte.get_net_production_rates(sei)*sei_APV
+        Rates_elyte_sei = sei_elyte.get_net_production_rates(elyte)*sei_APV
+
+        # Production rates from homogeneous chemical reactions in electrolyte (NOT IMPLEMENTED):
+        Rates_elyte = np.zeros_like(SV_dot[SVptr['Ck elyte'][j]])
 
         # Calculate residual for chemical molar concentrations:
         dSVdt_ck_sei = Rates_sei_elyte
         res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
+        dSVdt_ck_elyte = Rates_elyte_sei + Rates_elyte
+        res[SVptr['Ck elyte'][j]] = SV_dot[SVptr['Ck elyte'][j]] - dSVdt_ck_elyte
 
         # Calculate residual for sei volume fraction:
         dSVdt_eps_sei = np.dot(dSVdt_ck_sei, sei.partial_molar_volumes)
