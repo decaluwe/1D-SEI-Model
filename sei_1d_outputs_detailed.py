@@ -319,5 +319,17 @@ def plot_data(t, SV, SVptr, objs, params):
     ax5.legend(names)
     ax5.set_ylabel('Species volume fraction')
     ax5.set_xlabel('SEI Depth (from anode, nm)')
+
+    elyte_names = list()
+    for i in range(elyte.n_species):
+        elyte_names.append(elyte.species_names[i])
+    elyte_names.append('eps elyte')
+    fig6, ax6 = plt.subplots(1, 1, figsize=(8, 7.2))
+    ax6.plot(1e9 * np.arange(params['Ny']) / params['dyInv'], eps_k_elyte)
+    ax6.plot(1e9 * np.arange(params['Ny']) / params['dyInv'], 1. - SV[-1, SVptr['eps sei']])
+    ax6.legend(elyte_names)
+    ax6.set_ylabel('Species volume fraction')
+    ax6.set_xlabel('SEI Depth (from anode, nm)')
+
     plt.show()
     """plt.savefig('Figure2.pdf',format='pdf',dpi=350)"""
