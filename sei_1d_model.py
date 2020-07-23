@@ -47,8 +47,8 @@ SEI_1D = Implicit_Problem(residual, SV_0, SV_dot_0)
 
 # Define simulation parameters
 simulation = IDA(SEI_1D)                # Create simulation instance
-simulation.atol = 1e-7                  # Solver absolute tolerance
-simulation.rtol = 1e-4                  # Solver relative tolerance
+simulation.atol = 1e-8                  # Solver absolute tolerance
+simulation.rtol = 1e-6                  # Solver relative tolerance
 #simulation.maxh = 55                   # Solver max step size
 
 # Set simulation end time, slope flag (for anode voltage cycle), and run simulation
