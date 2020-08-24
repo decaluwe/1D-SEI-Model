@@ -320,6 +320,17 @@ def plot_data(t, SV, SVptr, objs, params):
     ax5.set_ylabel('Species volume fraction')
     ax5.set_xlabel('SEI Depth (from anode, nm)')
 
+    elyte_profiles = SV[-1, SVptr['Ck elyte']]
+    eps_k_elyte = np.zeros_like(elyte_profiles)
+    for i, p in enumerate(elyte_profiles):
+        eps_elyte = 1. - SV[-1, SVptr['eps sei'][i]]
+        elyte_vol_k = p * elyte.partial_molar_volumes
+        elyte_v_tot = np.dot(p, elyte.partial_molar_volumes)
+        # elyte_mol_k[i,:] = eps_elyte*elyte_vol_k*SV[-1,SVptr['Ck elyte'][i]]
+        eps_k_elyte[i, :] = eps_elyte * elyte_vol_k / elyte_v_tot
+
+    # elyte_mol_k_tot = [sum(x) for x in zip(*elyte_mol_k)]
+
     elyte_names = list()
     for i in range(elyte.n_species):
         elyte_names.append(elyte.species_names[i])

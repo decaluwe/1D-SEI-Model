@@ -51,6 +51,13 @@ def residual_detailed(t, SV, SV_dot):
     sei_APV = (1. - eps_sei_loc) * \
         (params['dyInv'] + 4.*eps_sei_loc/params['d_sei'])
 
+    # Array of molar fluxes (kmol/m2/s) and ionic current (A/m2) at WE/elyte BC
+    N_k_in = WE_elyte.get_net_production_rates(elyte)
+    i_io_in = 0.
+
+    # Initialize array of molar fluxes (kmol/m2/s) out of the volume:
+    N_k_out = np.zeros_like(N_k_in)
+
     # Loop through the remaining volumes (except for the very last one):
     for j in range(params['Ny']-1):
 
@@ -103,10 +110,10 @@ def residual_detailed(t, SV, SV_dot):
         # Rates_sei = sei.get_net_production_rates(sei)
 
         # # Elyte species transport
-        # tort = 1.5
+        # brugg = 1.5
         # grad_Ck_elyte = (Ck_elyte_loc - Ck_elyte_next)*params['dyInv']
-        # Deff_elyte = np.ones_like(SV_dot[SVptr['Ck elyte'][j]])*(10.**-10.)*((1.-eps_sei_loc)**tort)
-        # flux_elyte = np.multiply(Deff_elyte,grad_Ck_elyte)
+        # Deff_elyte = np.ones_like(SV_dot[SVptr['Ck elyte'][j]])*(10.**-10.)*((1.-eps_sei_loc)**brugg)
+        # N_k_out = np.multiply(Deff_elyte,grad_Ck_elyte)
 
 
         # Calculate residual for chemical molar concentrations:
