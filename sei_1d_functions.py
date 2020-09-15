@@ -40,6 +40,7 @@ def residual_detailed(t, SV, SV_dot):
 
     # SEI volume fraction:
     eps_sei_loc = SV[SVptr['eps sei'][j]]
+    eps_elyte_loc = 1. - eps_sei_loc
 
     # The current in the SEI entering this voluem is that produced by
     #   charge-transfer reactions at the WE-SEI interface:
@@ -109,11 +110,23 @@ def residual_detailed(t, SV, SV_dot):
         # Rates_elyte = elyte.get_net_production_rates(elyte)
         # Rates_sei = sei.get_net_production_rates(sei)
 
-        # # Elyte species transport
-        # brugg = 1.5
-        # grad_Ck_elyte = (Ck_elyte_loc - Ck_elyte_next)*params['dyInv']
-        # Deff_elyte = np.ones_like(SV_dot[SVptr['Ck elyte'][j]])*(10.**-10.)*((1.-eps_sei_loc)**brugg)
-        # N_k_out = np.multiply(Deff_elyte,grad_Ck_elyte)
+        # sei electric potential at next volume:
+        phi_sei_next = SV[SVptr['phi sei'][j+1]]
+
+        # Sei & elyte volume fractions in next volume:
+        eps_sei_next = SV[SVptr['eps sei'][j+1]]
+        eps_elyte_next = 1. - eps_sei_next
+
+        # Concentration and volume fracion at interface between nodes:
+        C_k_elyte_int = 0.5 * (Ck_elyte_loc + Ck_elyte_next)
+        eps_elyte_int = 0.5 * (eps_elyte_loc + eps_elyte_next)
+        eps_sei_int = 0.5 * (eps_sei_loc + eps_sei_next)
+
+         # Elyte species transport
+         brugg = 1.5
+         grad_Ck_elyte = (Ck_elyte_loc - Ck_elyte_next)*params['dyInv']
+         Deff_elyte = np.ones_like(SV_dot[SVptr['Ck elyte'][j]])*(10.**-10.)*(eps_elyte_int**brugg)
+         N_k_out = np.multiply(Deff_elyte,grad_Ck_elyte)
 
 
         # Calculate residual for chemical molar concentrations:
@@ -135,13 +148,6 @@ def residual_detailed(t, SV, SV_dot):
         Rates_sei_conductor = sei_elyte.get_net_production_rates(sei_conductor)
         i_Far[j] = Rates_sei_conductor*sei_APV/params['dyInv']
 
-        # sei electric potential at next volume:
-        phi_sei_next = SV[SVptr['phi sei'][j+1]]
-
-        # Sei volume fraction at interface between volumes:
-        eps_sei_next = SV[SVptr['eps sei'][j+1]]
-        eps_sei_int = 0.5*(eps_sei_loc + eps_sei_next)
-
         # Current = (Conductivity)*(volume fraction)*(-grad(Phi))
         dPhi = phi_sei_loc - phi_sei_next
         vol_k = sei.X * sei.partial_molar_volumes
@@ -157,6 +163,7 @@ def residual_detailed(t, SV, SV_dot):
             (eps_sei_loc*params['dyInv'] + 4.*eps_sei_loc/params['d_sei'])
 
         eps_sei_loc = eps_sei_next
+        eps_elyte_loc = eps_elyte_next
 
     # Repeat calculations for final node, where the boundary condition is
     #   that i_sei = 0 at the interface with the electrolyte:
