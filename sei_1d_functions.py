@@ -17,6 +17,7 @@ def residual_detailed(t, SV, SV_dot):
     sei_elyte = objs['SEI_elyte']
     sei_conductor = objs['conductor']
     WE_sei = objs['WE_SEI']
+    WE_elyte = objs['WE_elyte']
 
     phi_WE = np.interp(t,voltage_lookup['time'],voltage_lookup['voltage'])
 
@@ -122,12 +123,12 @@ def residual_detailed(t, SV, SV_dot):
         eps_elyte_int = 0.5 * (eps_elyte_loc + eps_elyte_next)
         eps_sei_int = 0.5 * (eps_sei_loc + eps_sei_next)
 
-         # Elyte species transport
-         brugg = 1.5
-         grad_Ck_elyte = (Ck_elyte_loc - Ck_elyte_next)*params['dyInv']
-         Deff_elyte = np.ones_like(SV_dot[SVptr['Ck elyte'][j]])*(10.**-10.)*(eps_elyte_int**brugg)
-         N_k_out = np.multiply(Deff_elyte,grad_Ck_elyte)
-         Fluxes = (N_k_in - N_k_out)
+        # Elyte species transport
+        brugg = 1.5
+        grad_Ck_elyte = (Ck_elyte_loc - Ck_elyte_next)*params['dyInv']
+        Deff_elyte = np.ones_like(SV_dot[SVptr['Ck elyte'][j]])*(10.**-10.)*(eps_elyte_int**brugg)
+        N_k_out = np.multiply(Deff_elyte,grad_Ck_elyte)
+        Fluxes = (N_k_in - N_k_out)
 
 
         # Calculate residual for chemical molar concentrations:
