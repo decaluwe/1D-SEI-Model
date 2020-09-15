@@ -127,10 +127,11 @@ def residual_detailed(t, SV, SV_dot):
          grad_Ck_elyte = (Ck_elyte_loc - Ck_elyte_next)*params['dyInv']
          Deff_elyte = np.ones_like(SV_dot[SVptr['Ck elyte'][j]])*(10.**-10.)*(eps_elyte_int**brugg)
          N_k_out = np.multiply(Deff_elyte,grad_Ck_elyte)
+         Fluxes = (N_k_in - N_k_out)
 
 
         # Calculate residual for chemical molar concentrations:
-        dSVdt_ck_sei = Rates_sei_elyte + Rates_sei
+        dSVdt_ck_sei = Rates_sei_elyte + Rates_sei + Fluxes
         res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
         dSVdt_ck_elyte = Rates_elyte_sei + Rates_elyte
         res[SVptr['Ck elyte'][j]] = SV_dot[SVptr['Ck elyte'][j]] - dSVdt_ck_elyte
@@ -164,6 +165,7 @@ def residual_detailed(t, SV, SV_dot):
 
         eps_sei_loc = eps_sei_next
         eps_elyte_loc = eps_elyte_next
+        N_k_in = N_k_out
 
     # Repeat calculations for final node, where the boundary condition is
     #   that i_sei = 0 at the interface with the electrolyte:
