@@ -128,7 +128,7 @@ def residual_detailed(t, SV, SV_dot):
         grad_Ck_elyte = (Ck_elyte_loc - Ck_elyte_next)*params['dyInv']
         Deff_elyte = np.ones_like(SV_dot[SVptr['Ck elyte'][j]])*(10.**-10.)*(eps_elyte_int**brugg)
         N_k_out = np.multiply(Deff_elyte,grad_Ck_elyte)
-        Flux_elyte = (N_k_in - N_k_out)
+        Flux_elyte = (N_k_in - N_k_out) / eps_elyte_loc
 
 
         # Calculate residual for chemical molar concentrations:
