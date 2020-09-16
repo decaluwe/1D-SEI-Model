@@ -203,10 +203,12 @@ def residual_detailed(t, SV, SV_dot):
     dSVdt_ck_sei = Rates_sei_elyte + Rates_sei
     res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
 
-    # Repeating calculations for elyte chemistry in final volume crashes the simulation for some reason
+    # Repeat calculations for elyte chemistry in final volume (has caused problems)
     Rates_elyte_sei = sei_elyte.get_net_production_rates(elyte) * sei_APV
+    #vv
     Rates_elyte = np.zeros_like(SV_dot[SVptr['Ck elyte'][j]])
     # Rates_elyte = elyte.get_net_production_rates(elyte)
+    #^^ need to multiply by volume fraction of elyte phase? (this is not yet in SV)
     dSVdt_ck_elyte = Rates_elyte_sei + Rates_elyte
     res[SVptr['Ck elyte'][j]] = SV_dot[SVptr['Ck elyte'][j]] - dSVdt_ck_elyte
 
