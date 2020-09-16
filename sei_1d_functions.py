@@ -196,9 +196,10 @@ def residual_detailed(t, SV, SV_dot):
     # SEI surface Area Per unit Volume (APV)
     sei_APV = 4.*eps_sei_loc*(1-eps_sei_loc)**2/params['d_sei']
     Rates_sei_elyte = sei_elyte.get_net_production_rates(sei)*sei_APV
-    Rates_sei = np.zeros_like(SV_dot[SVptr['Ck sei'][j]])
-    # Rates_sei = sei.get_net_production_rates(sei)
-    #^^ multiply by volume fraction of phase
+    #vv
+    Rates_sei = np.zeros_like(SV_dot[SVptr['Ck sei'][j]])*SV[SVptr['eps sei'][j]]
+    # Rates_sei = sei.get_net_production_rates(sei)*SV[SVptr['eps sei'][j]]
+    #^^ check proper implementation of multiplication by volume fraction of phase
     dSVdt_ck_sei = Rates_sei_elyte + Rates_sei
     res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
 
