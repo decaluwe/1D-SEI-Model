@@ -131,12 +131,13 @@ def residual_detailed(t, SV, SV_dot):
         # TODO #2
         N_k_out = np.multiply(Deff_elyte,grad_Ck_elyte) 
         # TODO #4 #3
-        grad_Flux_elyte = (N_k_in - N_k_out)*param['dyInv'] / eps_elyte_loc
+        grad_Flux_elyte = (N_k_in - N_k_out)*param['dyInv']
 
 
         # Calculate residual for chemical molar concentrations:
         dSVdt_ck_sei = Rates_sei_elyte + Rates_sei
         res[SVptr['Ck sei'][j]] = SV_dot[SVptr['Ck sei'][j]] - dSVdt_ck_sei
+        # TODO #5
         dSVdt_ck_elyte = Rates_elyte_sei + Rates_elyte + grad_Flux_elyte
         res[SVptr['Ck elyte'][j]] = SV_dot[SVptr['Ck elyte'][j]] - dSVdt_ck_elyte
 
