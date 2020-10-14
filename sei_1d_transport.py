@@ -116,11 +116,11 @@ def elyte_transport(t, SV, params, objs, SVptr):
 
     # Charge neutrality on the cathode as a whole:
     i_io_out = params['i_ext']
-
-    # TODO: #8 replace this with electro-diffusive flux:
+    #TODO #7 replace this with electro-diffusive flux:
     N_k_out = np.zeros_like(N_k_in)
     N_k_out[params['i_dl_species']] = i_io_out / \
                                       (F * params['Z_k_elyte'][params['i_dl_species']])
+
 
     # Calculate change in double layer potential
     #    Double layer current

@@ -126,7 +126,7 @@ def LiO2_func(t, SV, params, objs, SVptr):
     # Charge neutrality on the cathode as a whole:
     i_io_out = params['i_ext']
 
-    # TODO: #8 replace this with electro-diffusive flux:
+    # : #8 replace this with electro-diffusive flux:
     N_k_out = np.zeros_like(N_k_in)
     N_k_out[params['i_dl_species']] = i_io_out / \
                                       (F * params['Z_k_elyte'][params['i_dl_species']])
